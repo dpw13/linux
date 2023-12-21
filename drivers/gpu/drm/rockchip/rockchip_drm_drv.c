@@ -2026,7 +2026,9 @@ static int rockchip_drm_bind(struct device *dev)
 	if (ret)
 		goto err_kms_helper_poll_fini;
 
+#if !defined(CONFIG_ARCH_ROCKCHIP_ODROID_COMMON)
 	rockchip_drm_show_logo(drm_dev);
+#endif
 
 	ret = rockchip_drm_fbdev_init(drm_dev);
 	if (ret)
