@@ -519,10 +519,21 @@ static int panel_simple_regulator_disable(struct panel_simple *p)
 	return 0;
 }
 
+#if defined(CONFIG_ARCH_ROCKCHIP_ODROID_COMMON)
+static const struct of_device_id platform_of_match[];
+#endif
+
 int panel_simple_loader_protect(struct drm_panel *panel)
 {
 	struct panel_simple *p = to_panel_simple(panel);
 	int err;
+
+#if defined(CONFIG_ARCH_ROCKCHIP_ODROID_COMMON)
+	const struct of_device_id *id;
+	id = of_match_node(platform_of_match, panel->dev->of_node);
+	if (!id)
+		return -ENODEV;
+#endif
 
 	err = panel_simple_regulator_enable(p);
 	if (err < 0) {
