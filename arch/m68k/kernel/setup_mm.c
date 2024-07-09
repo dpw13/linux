@@ -46,6 +46,9 @@
 #ifdef CONFIG_SUN3X
 #include <asm/dvma.h>
 #endif
+#ifdef CONFIG_TENKON
+#include <asm/tenkonhw.h>
+#endif
 #include <asm/macintosh.h>
 #include <asm/natfeat.h>
 #include <asm/config.h>

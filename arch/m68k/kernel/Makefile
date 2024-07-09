@@ -15,6 +15,7 @@ obj-$(CONFIG_Q40)	:= head.o
 obj-$(CONFIG_SUN3X)	:= head.o
 obj-$(CONFIG_VIRT)	:= head.o
 obj-$(CONFIG_SUN3)	:= sun3-head.o
+obj-$(CONFIG_TENKON)	:= head.o
 
 obj-y	+= entry.o irq.o module.o process.o ptrace.o
 obj-y	+= setup.o signal.o sys_m68k.o syscalltable.o time.o traps.o

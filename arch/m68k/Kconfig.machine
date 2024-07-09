@@ -149,6 +149,21 @@ config SUN3
 
 	  If you don't want to compile a kernel exclusively for a Sun 3, say N.
 
+config TENKON
+	bool "Tenkon support"
+	depends on MMU
+	select MMU_MOTOROLA if MMU
+	select LEGACY_TIMER_TICK
+	select NO_DMA
+	select M68030
+	help
+	  So in Japanese personal computer is persocon, and heavenly messangers
+	  are Tenko or Heaven's Child. So I joined it to Tenkon. That's where
+	  the Fox girl theme comes from cause Foxes are the messengers of Inari
+	  the god(dess) of prosperity and it uses Tenko.
+
+	  Anyway that's way too much Japanese Mythology.
+
 config VIRT
 	bool "Virtual M68k Machine support"
 	depends on MMU

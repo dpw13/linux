@@ -262,6 +262,7 @@
 #include <asm/bootinfo-hp300.h>
 #include <asm/bootinfo-mac.h>
 #include <asm/bootinfo-q40.h>
+#include <asm/bootinfo-tenkon.h>
 #include <asm/bootinfo-virt.h>
 #include <asm/bootinfo-vme.h>
 #include <asm/setup.h>
@@ -535,6 +536,7 @@ func_define	putn,1
 #define is_not_apollo(lab) cmpl &MACH_APOLLO,%pc@(m68k_machtype); jne lab
 #define is_not_q40(lab) cmpl &MACH_Q40,%pc@(m68k_machtype); jne lab
 #define is_not_sun3x(lab) cmpl &MACH_SUN3X,%pc@(m68k_machtype); jne lab
+#define is_not_tenkon(lab) cmpl &MACH_TENKON,%pc@(m68k_machtype); jne lab
 #define is_not_virt(lab) cmpl &MACH_VIRT,%pc@(m68k_machtype); jne lab
 
 #define hasnt_leds(lab) cmpl &MACH_HP300,%pc@(m68k_machtype); \
@@ -581,6 +583,7 @@ ENTRY(_stext)
 	.long	MACH_MAC, MAC_BOOTI_VERSION
 	.long	MACH_Q40, Q40_BOOTI_VERSION
 	.long	MACH_HP300, HP300_BOOTI_VERSION
+	.long	MACH_TENKON, TENKON_BOOTI_VERSION
 	.long	0
 1:	jra	__start
 
@@ -1135,6 +1138,25 @@ L(not16x):
 
 L(not6000):
 #endif /* CONFIG_BVME6000 */
+
+#ifdef CONFIG_TENKON
+	is_not_tenkon(L(nottenkon))
+
+	putc    'T'
+
+	/* SRAM */
+	mmu_map_tt	#0,#0x00000000,#0x00080000,#_PAGE_CACHE040W
+	/* DRAM */
+	mmu_map_tt	#0,#0x04000000,#0x04000000,#_PAGE_CACHE040W
+	/* ROM */
+	mmu_map_tt	#0,#0xfff00000,#0x00100000,#_PAGE_CACHE040W
+	/* Card memory */
+	mmu_map_tt	#1,#0x10000000,#0xeff00000,#_PAGE_NOCACHE_S
+
+	jbra	L(mmu_init_done)
+
+L(nottenkon):
+#endif
 
 /*
  * mmu_init_mac
@@ -2994,6 +3016,10 @@ L(serial_init_not_mvme16x):
 /* We count on the boot loader initialising the UART */
 #endif
 
+#ifdef CONFIG_TENKON
+/* We count on the boot loader initialising the UART */
+#endif
+
 L(serial_init_done):
 func_return	serial_init
 
@@ -3168,6 +3194,15 @@ func_start	serial_putc,%d0/%d1/%a0/%a1
 	addq.l	#4,%a0
 	move.l	%a0,%a1@
 	jbra    L(serial_putc_done)
+2:
+#endif
+
+#ifdef CONFIG_TENKON
+	is_not_tenkon(2f)
+1:	move.b TERM_SRA,%d1
+	move.w %d1,%ccr
+	bnes 1b
+	move.b %d0,TERM_TXFIFOA
 2:
 #endif
 
@@ -3868,6 +3903,11 @@ L(uartbase):
 	.long	0
 L(uart_scode):
 	.long	-1
+#endif
+
+#if defined(CONFIG_TENKON)
+TERM_SRA		= 0xfe400001
+TERM_TXFIFOA	= 0xfe400003
 #endif
 
 __FINIT

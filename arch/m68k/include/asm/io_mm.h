@@ -38,7 +38,9 @@
 /*
  * IO/MEM definitions for various ISA bridges
  */
-
+#ifdef CONFIG_TENKON
+#define MULTI_ISA 0
+#endif /* Tenkon */
 
 #ifdef CONFIG_Q40
 
@@ -95,14 +97,23 @@
 #define ISA_TYPE_Q40  (1)
 #define ISA_TYPE_AG   (2)
 #define ISA_TYPE_ENEC (3)
+#define ISA_TYPE_RAW  (4)
 
 #if defined(CONFIG_Q40) && !defined(MULTI_ISA)
 #define ISA_TYPE ISA_TYPE_Q40
 #define ISA_SEX  0
 #endif
+#if defined(CONFIG_TENKON) && !defined(MULTI_ISA)
+#define ISA_TYPE ISA_TYPE_RAW
+#define ISA_SEX  0
+#endif
 #if defined(CONFIG_AMIGA_PCMCIA) && !defined(MULTI_ISA)
 #define ISA_TYPE ISA_TYPE_AG
 #define ISA_SEX  1
+#endif
+#if defined(CONFIG_ATARI_ROM_ISA) && !defined(MULTI_ISA)
+#define ISA_TYPE ISA_TYPE_ENEC
+#define ISA_SEX  0
 #endif
 #if defined(CONFIG_ATARI_ROM_ISA) && !defined(MULTI_ISA)
 #define ISA_TYPE ISA_TYPE_ENEC
@@ -135,6 +146,9 @@ static inline u8 __iomem *isa_itb(unsigned long addr)
 #ifdef CONFIG_ATARI_ROM_ISA
     case ISA_TYPE_ENEC: return (u8 __iomem *)ENEC_ISA_IO_B(addr);
 #endif
+#ifdef CONFIG_TENKON
+    case ISA_TYPE_RAW: return (u8 __iomem *)addr;
+#endif
     default: return NULL; /* avoid warnings, just in case */
     }
 }
@@ -151,6 +165,9 @@ static inline u16 __iomem *isa_itw(unsigned long addr)
 #ifdef CONFIG_ATARI_ROM_ISA
     case ISA_TYPE_ENEC: return (u16 __iomem *)ENEC_ISA_IO_W(addr);
 #endif
+#ifdef CONFIG_TENKON
+    case ISA_TYPE_RAW: return (u16 __iomem *)addr;
+#endif
     default: return NULL; /* avoid warnings, just in case */
     }
 }
@@ -160,6 +177,9 @@ static inline u32 __iomem *isa_itl(unsigned long addr)
     {
 #ifdef CONFIG_AMIGA_PCMCIA
     case ISA_TYPE_AG: return (u32 __iomem *)AG_ISA_IO_W(addr);
+#endif
+#ifdef CONFIG_TENKON
+    case ISA_TYPE_RAW: return (u32 __iomem *)addr;
 #endif
     default: return 0; /* avoid warnings, just in case */
     }
@@ -177,6 +197,9 @@ static inline u8 __iomem *isa_mtb(unsigned long addr)
 #ifdef CONFIG_ATARI_ROM_ISA
     case ISA_TYPE_ENEC: return (u8 __iomem *)ENEC_ISA_MEM_B(addr);
 #endif
+#ifdef CONFIG_TENKON
+    case ISA_TYPE_RAW: return (u8 __iomem *)addr;
+#endif
     default: return NULL; /* avoid warnings, just in case */
     }
 }
@@ -192,6 +215,9 @@ static inline u16 __iomem *isa_mtw(unsigned long addr)
 #endif
 #ifdef CONFIG_ATARI_ROM_ISA
     case ISA_TYPE_ENEC: return (u16 __iomem *)ENEC_ISA_MEM_W(addr);
+#endif
+#ifdef CONFIG_ATARI_ROM_ISA
+    case ISA_TYPE_TENKON: return (u16 __iomem *)addr;
 #endif
     default: return NULL; /* avoid warnings, just in case */
     }
