@@ -362,13 +362,13 @@ config MOD5272
 	help
 	  Support for the Netburner MOD-5272 board.
 
-if !MMU || COLDFIRE
+if !MMU || COLDFIRE || TENKON
 
 comment "Machine Options"
 
 config UBOOT
 	bool "Support for U-Boot command line parameters"
-	depends on COLDFIRE
+	depends on COLDFIRE || TENKON
 	help
 	  If you say Y here kernel will try to collect command
 	  line parameters from the initial u-boot stack.
