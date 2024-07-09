@@ -77,14 +77,14 @@ void __init config_tenkon(void)
 static u64 tenkon_read_clk(struct clocksource *cs);
 
 static struct clocksource tenkon_clk = {
-	.name   = "pcc",
+	.name   = "dp8570a",
 	.rating = 250,
 	.read   = tenkon_read_clk,
 	.mask   = CLOCKSOURCE_MASK(32),
 	.flags  = CLOCK_SOURCE_IS_CONTINUOUS,
 };
 
-static u32 clk_total;
+static volatile u32 clk_total;
 
 #define DP8570A_TIMER_CLOCK_FREQ 1000
 #define DP8570A_TIMER_CYCLES     (DP8570A_TIMER_CLOCK_FREQ / HZ)
@@ -110,9 +110,6 @@ void tenkon_sched_init (void)
 			"timer 1", NULL))
 		pr_err("Couldn't register timer interrupt\n");
 
-	/* Init the clock with a value */
-	/* The clock counter increments until 0xFFFF then reloads */
-
 	clocksource_register_hz(&tenkon_clk, DP8570A_TIMER_CLOCK_FREQ);
 }
 
@@ -122,7 +119,7 @@ static u64 tenkon_read_clk(struct clocksource *cs)
 	u32 ticks;
 
 	local_irq_save(flags);
-	ticks = 0;
+	ticks = clk_total;
 	local_irq_restore(flags);
 
 	return ticks;
@@ -131,7 +128,8 @@ static u64 tenkon_read_clk(struct clocksource *cs)
 int tenkon_hwclk(int op, struct rtc_time *t)
 {
 	if (!op) {
-		return 0;
+		/* FIXME Reading the time is not yet supported */
+		return -EOPNOTSUPP;
 	} else {
 		/* FIXME Setting the time is not yet supported */
 		return -EOPNOTSUPP;

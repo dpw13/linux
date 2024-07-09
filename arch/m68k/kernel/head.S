@@ -303,6 +303,9 @@
 #ifdef CONFIG_Q40
 .globl q40_mem_cptr
 #endif
+#if defined(CONFIG_UBOOT)
+.global	_init_sp
+#endif
 
 CPUTYPE_040	= 1	/* indicates an 040 */
 CPUTYPE_060	= 2	/* indicates an 060 */
@@ -585,16 +588,17 @@ ENTRY(_stext)
 	.long	MACH_HP300, HP300_BOOTI_VERSION
 	.long	MACH_TENKON, TENKON_BOOTI_VERSION
 	.long	0
-1:	jra	__start
+1:	jra	_start
 
 .equ	kernel_pg_dir,_stext
 
 .equ	.,_stext+PAGESIZE
 
 ENTRY(_start)
-	jra	__start
-__INIT
-ENTRY(__start)
+	movew	#0x2700, %sr			/* no interrupts */
+#if defined(CONFIG_UBOOT)
+	movel	%sp,_init_sp			/* save initial stack pointer */
+#endif
 /*
  * Setup initial stack pointer
  */
@@ -1145,13 +1149,13 @@ L(not6000):
 	putc    'T'
 
 	/* SRAM */
-	mmu_map_tt	#0,#0x00000000,#0x00080000,#_PAGE_CACHE040W
+	mmu_map_tt	#0,#0x00000000,#0x00080000,#_PAGE_READWRITE
 	/* DRAM */
-	mmu_map_tt	#0,#0x04000000,#0x04000000,#_PAGE_CACHE040W
+	mmu_map_tt	#0,#0x04000000,#0x04000000,#_PAGE_READWRITE
 	/* ROM */
-	mmu_map_tt	#0,#0xfff00000,#0x00100000,#_PAGE_CACHE040W
+	mmu_map_tt	#0,#0xfff00000,#0x00100000,#_PAGE_RONLY
 	/* Card memory */
-	mmu_map_tt	#1,#0x10000000,#0xeff00000,#_PAGE_NOCACHE_S
+	mmu_map_tt	#1,#0x10000000,#0xeff00000,#_PAGE_NOCACHE030
 
 	jbra	L(mmu_init_done)
 
@@ -3203,6 +3207,7 @@ func_start	serial_putc,%d0/%d1/%a0/%a1
 	move.w %d1,%ccr
 	bnes 1b
 	move.b %d0,TERM_TXFIFOA
+	jbra	L(serial_putc_done)
 2:
 #endif
 
@@ -3936,3 +3941,8 @@ GF_PUT_CHAR = 0x00
 L(virt_gf_tty_base):
 	.long 0
 #endif /* CONFIG_VIRT */
+
+#if defined(CONFIG_UBOOT)
+_init_sp:
+.long	0
+#endif
