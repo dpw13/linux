@@ -156,6 +156,7 @@ config TENKON
 	select LEGACY_TIMER_TICK
 	select NO_DMA
 	select M68030
+	select OF_EARLY_FLATTREE
 	help
 	  So in Japanese personal computer is persocon, and heavenly messangers
 	  are Tenko or Heaven's Child. So I joined it to Tenkon. That's where

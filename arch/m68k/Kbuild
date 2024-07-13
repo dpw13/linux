@@ -19,3 +19,6 @@ obj-$(CONFIG_M68KFPU_EMU)	+= math-emu/
 obj-$(CONFIG_M68000)		+= 68000/
 obj-$(CONFIG_COLDFIRE)		+= coldfire/
 obj-$(CONFIG_VIRT)		+= virt/
+
+# for cleaning
+subdir- += boot
