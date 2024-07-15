@@ -74,6 +74,7 @@ static struct pmic_mfd_data silergy_sy7636a = {
 
 static const struct mfd_cell fp9931_cells[] = {
 	{ .name = "fp9931-regulator", },
+	{ .name = "fp9931-thermal", },
 };
 
 static struct pmic_mfd_data fitipower_fp9931 = {
