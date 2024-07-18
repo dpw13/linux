@@ -54,6 +54,9 @@
 #define RK3288_LVDS_CON_CLKINV(x)	HIWORD_UPDATE(x,  8,  8)
 #define RK3288_LVDS_CON_TTL_EN(x)	HIWORD_UPDATE(x,  6,  6)
 
+#define RK3506_GRF_SOC_CON2		0x0008
+#define RK3506_GRF_VOP_DATA_BYPASS(v)	HIWORD_UPDATE(v, 1, 2)
+
 #define RK3562_GRF_IOC_VO_IO_CON	0x10500
 #define RK3562_RGB_DATA_BYPASS(v)	HIWORD_UPDATE(v, 6, 6)
 
@@ -263,7 +266,9 @@ static void rockchip_rgb_encoder_disable(struct drm_encoder *encoder)
 		rgb->funcs->disable(rgb);
 
 	pinctrl_pm_select_sleep_state(rgb->dev);
-	s->output_if &= ~(VOP_OUTPUT_IF_RGB | VOP_OUTPUT_IF_BT656 | VOP_OUTPUT_IF_BT1120);
+
+	if (crtc->state->active_changed)
+		s->output_if &= ~(VOP_OUTPUT_IF_RGB | VOP_OUTPUT_IF_BT656 | VOP_OUTPUT_IF_BT1120);
 }
 
 static int
@@ -382,7 +387,6 @@ rockchip_rgb_encoder_mode_valid(struct drm_encoder *encoder,
 				 const struct drm_display_mode *mode)
 {
 	struct rockchip_rgb *rgb = encoder_to_rgb(encoder);
-	struct device *dev = rgb->dev;
 	struct drm_display_info *info = &rgb->connector.display_info;
 	u32 request_clock = mode->clock;
 	u32 max_clock = rgb->max_dclk_rate;
@@ -401,8 +405,8 @@ rockchip_rgb_encoder_mode_valid(struct drm_encoder *encoder,
 				 (rgb->mcu_pix_total + 1);
 
 	if (max_clock != 0 && request_clock > max_clock) {
-		DRM_DEV_ERROR(dev, "mode [%dx%d] clock %d is higher than max_clock %d\n",
-			      mode->hdisplay, mode->vdisplay, request_clock, max_clock);
+		DRM_DEBUG_DRIVER("mode [%dx%d] clock %d is higher than max_clock %d\n",
+				 mode->hdisplay, mode->vdisplay, request_clock, max_clock);
 		return MODE_CLOCK_HIGH;
 	}
 
@@ -1079,6 +1083,22 @@ static const struct rockchip_rgb_data rk3288_rgb = {
 	.funcs = &rk3288_rgb_funcs,
 };
 
+static void rk3506_rgb_enable(struct rockchip_rgb *rgb)
+{
+	regmap_write(rgb->grf, RK3506_GRF_SOC_CON2,
+		     RK3506_GRF_VOP_DATA_BYPASS(rgb->data_sync_bypass ? 0x3 : 0x0));
+}
+
+static const struct rockchip_rgb_funcs rk3506_rgb_funcs = {
+	.enable = rk3506_rgb_enable,
+};
+
+static const struct rockchip_rgb_data rk3506_rgb = {
+	.rgb_max_dclk_rate = 120000,
+	.mcu_max_dclk_rate = 120000,
+	.funcs = &rk3506_rgb_funcs,
+};
+
 static void rk3562_rgb_enable(struct rockchip_rgb *rgb)
 {
 	regmap_write(rgb->grf, RK3562_GRF_IOC_VO_IO_CON,
@@ -1166,6 +1186,7 @@ static const struct of_device_id rockchip_rgb_dt_ids[] = {
 	{ .compatible = "rockchip,rk3288-rgb", .data = &rk3288_rgb },
 	{ .compatible = "rockchip,rk3308-rgb", },
 	{ .compatible = "rockchip,rk3368-rgb", },
+	{ .compatible = "rockchip,rk3506-rgb", .data = &rk3506_rgb },
 	{ .compatible = "rockchip,rk3562-rgb", .data = &rk3562_rgb },
 	{ .compatible = "rockchip,rk3568-rgb", .data = &rk3568_rgb },
 	{ .compatible = "rockchip,rk3576-rgb", .data = &rk3576_rgb },

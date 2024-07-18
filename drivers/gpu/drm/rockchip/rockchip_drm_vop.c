@@ -2119,7 +2119,7 @@ static void vop_plane_atomic_update(struct drm_plane *plane,
 			dsp_h = 4;
 		actual_h = dsp_h * actual_h / drm_rect_height(dest);
 	}
-	if ((vop->version == VOP_VERSION(2, 2) || vop->version == VOP_VERSION(2, 0xd)) &&
+	if ((vop->version == VOP_VERSION(2, 2) || vop->version >= VOP_VERSION(2, 0xd)) &&
 	    (adjusted_mode->flags & DRM_MODE_FLAG_INTERLACE))
 		dsp_h = dsp_h / 2;
 
@@ -2134,7 +2134,7 @@ static void vop_plane_atomic_update(struct drm_plane *plane,
 
 	dsp_stx = dest->x1 + mode->crtc_htotal - mode->crtc_hsync_start;
 	dsp_sty = dest->y1 + mode->crtc_vtotal - mode->crtc_vsync_start;
-	if ((vop->version == VOP_VERSION(2, 2) || vop->version == VOP_VERSION(2, 0xd)) &&
+	if ((vop->version == VOP_VERSION(2, 2) || vop->version >= VOP_VERSION(2, 0xd)) &&
 	    (adjusted_mode->flags & DRM_MODE_FLAG_INTERLACE))
 		dsp_sty = dest->y1 / 2 + mode->crtc_vtotal - mode->crtc_vsync_start;
 	dsp_st = dsp_sty << 16 | (dsp_stx & 0xffff);
@@ -3144,7 +3144,7 @@ static void vop_crtc_send_mcu_cmd(struct drm_crtc *crtc,  u32 type, u32 value)
 	vop = to_vop(crtc);
 	adjusted_mode = &crtc->state->adjusted_mode;
 
-	if (vop->version == VOP_VERSION(2, 0xd)) {
+	if (vop->version >= VOP_VERSION(2, 0xd)) {
 		/*
 		 * 1.set mcu bypass mode timing.
 		 * 2.set dclk rate to 150M.
@@ -3176,7 +3176,7 @@ static void vop_crtc_send_mcu_cmd(struct drm_crtc *crtc,  u32 type, u32 value)
 	}
 	mutex_unlock(&vop->vop_lock);
 
-	if (vop->version == VOP_VERSION(2, 0xd)) {
+	if (vop->version >= VOP_VERSION(2, 0xd)) {
 		/*
 		 * 1.restore mcu data mode timing.
 		 * 2.restore dclk rate to crtc_clock.
@@ -3497,7 +3497,7 @@ static void vop_crtc_atomic_enable(struct drm_crtc *crtc,
 		vop_crtc_load_lut(crtc);
 
 	if (vop->mcu_timing.mcu_pix_total) {
-		if (vop->version == VOP_VERSION(2, 0xd))
+		if (vop->version >= VOP_VERSION(2, 0xd))
 			vop_set_out_mode(vop, s->output_mode);
 		else
 			vop_set_out_mode(vop, ROCKCHIP_OUT_MODE_P888);
