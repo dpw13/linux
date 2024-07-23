@@ -122,19 +122,10 @@
 		regulator-settling-time-up-us = <250>;
 		pwm-supply = <&vcc_sys>;
 	};
+};
 
-	vcc0v9_stb: vcc0v9-stb {
-		compatible = "pwm-regulator";
-		pwms = <&pwm0_4ch_1 0 5000 1>;
-		regulator-name = "vcc0v9_stb";
-		regulator-min-microvolt = <810000>;
-		regulator-max-microvolt = <1006000>;
-		regulator-init-microvolt = <900000>;
-		regulator-always-on;
-		regulator-boot-on;
-		regulator-settling-time-up-us = <250>;
-		pwm-supply = <&vcc_sys>;
-	};
+&cpu0 {
+	cpu-supply = <&vdd_arm>;
 };
 
 &fspi {
@@ -208,5 +199,17 @@
 &pwm0_4ch_1 {
 	pinctrl-names = "active";
 	pinctrl-0 = <&rm_io20_pwm0_ch1>;
+	status = "okay";
+};
+
+&u2phy_otg0 {
+	status = "okay";
+};
+
+&usb2phy {
+	status = "okay";
+};
+
+&usb20_otg0 {
 	status = "okay";
 };
