@@ -1323,6 +1323,8 @@
 		flexbus_adc: adc {
 			compatible = "rockchip,flexbus-adc";
 			#io-channel-cells = <0>;
+			clocks = <&cru CLK_REF_OUT1>;
+			clock-names = "ref_clk";	/* ref_clk is only used for slave-mode */
 			rockchip,slave-mode;
 			rockchip,free-sclk;
 			rockchip,auto-pad;
@@ -1592,8 +1594,8 @@
 		compatible = "rockchip,rk3506-pwm", "rockchip,rk3576-pwm";
 		reg = <0xff930000 0x200>;
 		interrupts = <GIC_SPI 22 IRQ_TYPE_LEVEL_HIGH>;
-		clocks = <&cru CLK_PWM0>, <&cru PCLK_PWM0>;
-		clock-names = "pwm", "pclk";
+		clocks = <&cru CLK_PWM0>, <&cru PCLK_PWM0>, <&cru CLK_OSC_PWM0>;
+		clock-names = "pwm", "pclk", "osc";
 		#pwm-cells = <3>;
 		status = "disabled";
 	};
@@ -1602,8 +1604,8 @@
 		compatible = "rockchip,rk3506-pwm", "rockchip,rk3576-pwm";
 		reg = <0xff931000 0x200>;
 		interrupts = <GIC_SPI 23 IRQ_TYPE_LEVEL_HIGH>;
-		clocks = <&cru CLK_PWM0>, <&cru PCLK_PWM0>;
-		clock-names = "pwm", "pclk";
+		clocks = <&cru CLK_PWM0>, <&cru PCLK_PWM0>, <&cru CLK_OSC_PWM0>;
+		clock-names = "pwm", "pclk", "osc";
 		#pwm-cells = <3>;
 		status = "disabled";
 	};
@@ -1612,8 +1614,8 @@
 		compatible = "rockchip,rk3506-pwm", "rockchip,rk3576-pwm";
 		reg = <0xff932000 0x200>;
 		interrupts = <GIC_SPI 24 IRQ_TYPE_LEVEL_HIGH>;
-		clocks = <&cru CLK_PWM0>, <&cru PCLK_PWM0>;
-		clock-names = "pwm", "pclk";
+		clocks = <&cru CLK_PWM0>, <&cru PCLK_PWM0>, <&cru CLK_OSC_PWM0>;
+		clock-names = "pwm", "pclk", "osc";
 		#pwm-cells = <3>;
 		status = "disabled";
 	};
@@ -1622,8 +1624,8 @@
 		compatible = "rockchip,rk3506-pwm", "rockchip,rk3576-pwm";
 		reg = <0xff933000 0x200>;
 		interrupts = <GIC_SPI 25 IRQ_TYPE_LEVEL_HIGH>;
-		clocks = <&cru CLK_PWM0>, <&cru PCLK_PWM0>;
-		clock-names = "pwm", "pclk";
+		clocks = <&cru CLK_PWM0>, <&cru PCLK_PWM0>, <&cru CLK_OSC_PWM0>;
+		clock-names = "pwm", "pclk", "osc";
 		#pwm-cells = <3>;
 		status = "disabled";
 	};
