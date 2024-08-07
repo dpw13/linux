@@ -914,6 +914,11 @@ struct vop2 {
 	 * @active_vp_mask: Bitmask of active video ports;
 	 */
 	uint8_t active_vp_mask;
+	/**
+	 * @active_display_mask: Bitmask of active display;
+	 */
+	uint8_t active_display_mask;
+
 	uint16_t port_mux_cfg;
 
 	uint32_t *regsbak;
@@ -2329,7 +2334,7 @@ static enum vop2_wb_format vop2_convert_wb_format(uint32_t format)
 
 static void vop2_set_system_status(struct vop2 *vop2, bool is_enabled)
 {
-	unsigned int nports = hweight8(vop2->active_vp_mask);
+	unsigned int nports = hweight8(vop2->active_display_mask);
 
 	if (is_enabled) {
 		if (nports == 2)
@@ -5130,6 +5135,7 @@ static void vop2_crtc_atomic_disable(struct drm_crtc *crtc,
 	vop2->active_vp_mask &= ~BIT(vp->id);
 	if (vcstate->splice_mode)
 		vop2->active_vp_mask &= ~BIT(splice_vp->id);
+	vop2->active_display_mask &= ~BIT(vp->id);
 	vcstate->splice_mode = false;
 	vcstate->output_flags = 0;
 	vp->splice_mode_right = false;
@@ -7049,6 +7055,7 @@ static int vop2_crtc_loader_protect(struct drm_crtc *crtc, bool on, void *data)
 	if (on) {
 		vp->loader_protect = true;
 		vop2->active_vp_mask |= BIT(vp->id);
+		vop2->active_display_mask |= BIT(vp->id);
 		vop2_set_system_status(vop2, true);
 		vop2_initial(crtc);
 		if (crtc->primary) {
@@ -7195,6 +7202,7 @@ static void vop2_dump_connector_on_crtc(struct drm_crtc *crtc, struct seq_file *
 static int vop2_crtc_debugfs_dump(struct drm_crtc *crtc, struct seq_file *s)
 {
 	struct vop2_video_port *vp = to_vop2_video_port(crtc);
+	struct vop2 *vop2 = vp->vop2;
 	struct drm_crtc_state *crtc_state = crtc->state;
 	struct drm_display_mode *mode = &crtc->state->adjusted_mode;
 	struct rockchip_crtc_state *state = to_rockchip_crtc_state(crtc->state);
@@ -7218,8 +7226,9 @@ static int vop2_crtc_debugfs_dump(struct drm_crtc *crtc, struct seq_file *s)
 	DEBUG_PRINT("    Display mode: %dx%d%s%d\n",
 		    mode->hdisplay, mode->vdisplay, interlaced ? "i" : "p",
 		    drm_mode_vrefresh(mode));
-	DEBUG_PRINT("\tclk[%d] real_clk[%d] type[%x] flag[%x]\n",
-		    mode->clock, mode->crtc_clock, mode->type, mode->flags);
+	DEBUG_PRINT("\tdclk[%d kHz] real_dclk[%d kHz] aclk[%ld kHz] type[%x] flag[%x]\n",
+		    mode->clock, mode->crtc_clock, clk_get_rate(vop2->aclk) / 1000,
+		    mode->type, mode->flags);
 	DEBUG_PRINT("\tH: %d %d %d %d\n", mode->hdisplay, mode->hsync_start,
 		    mode->hsync_end, mode->htotal);
 	DEBUG_PRINT("\tV: %d %d %d %d\n", mode->vdisplay, mode->vsync_start,
@@ -7772,21 +7781,27 @@ static size_t vop2_crtc_bandwidth(struct drm_crtc *crtc,
 	uint16_t htotal = adjusted_mode->crtc_htotal;
 	uint16_t vdisplay = adjusted_mode->crtc_vdisplay;
 	int clock = adjusted_mode->crtc_clock;
-	struct drm_atomic_state *state = crtc_state->state;
 	struct vop2_plane_state *vpstate;
 	struct drm_plane_state *pstate;
 	struct vop2_bandwidth *pbandwidth;
 	struct drm_plane *plane;
 	u64 line_bw_mbyte = 0;
 	int8_t cnt = 0, plane_num = 0;
-	int i = 0;
 
 	if (!htotal || !vdisplay)
 		return 0;
 
-	for_each_new_plane_in_state(state, plane, pstate, i) {
-		if (pstate->crtc == crtc)
-			plane_num++;
+	/*
+	 * userspace maybe want to change some property and commit new frame
+	 * without any plane, so we need use api drm_atomic_crtc_for_each_plane
+	 * to get current plane or bandwidth info correctly.
+	 */
+	drm_atomic_crtc_for_each_plane(plane, crtc) {
+		pstate = plane->state;
+		if (!pstate || pstate->crtc != crtc || !pstate->fb)
+			continue;
+
+		plane_num++;
 	}
 
 	vop_bw_info->plane_num += plane_num;
@@ -7795,9 +7810,10 @@ static size_t vop2_crtc_bandwidth(struct drm_crtc *crtc,
 	if (!pbandwidth)
 		return -ENOMEM;
 
-	for_each_new_plane_in_state(state, plane, pstate, i) {
+	drm_atomic_crtc_for_each_plane(plane, crtc) {
 		int act_w, act_h, bpp, afbc_fac;
 		int fps = drm_mode_vrefresh(adjusted_mode);
+		pstate = plane->state;
 
 		if (!pstate || pstate->crtc != crtc || !pstate->fb)
 			continue;
@@ -9156,6 +9172,7 @@ static void vop2_crtc_atomic_enable(struct drm_crtc *crtc, struct drm_atomic_sta
 	}
 
 	vop2->active_vp_mask |= BIT(vp->id);
+	vop2->active_display_mask |= BIT(vp->id);
 	vop2_set_system_status(vop2, true);
 	rockchip_request_late_resume();
 
