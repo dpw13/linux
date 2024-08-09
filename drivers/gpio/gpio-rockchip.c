@@ -209,11 +209,12 @@ static int rockchip_gpio_set_debounce(struct gpio_chip *gc,
 	unsigned int cur_div_reg;
 	u64 div;
 
-	if (bank->gpio_type >= GPIO_TYPE_V2 && !IS_ERR(bank->db_clk)) {
-		div_debounce_support = true;
+	div_debounce_support = (bank->gpio_type >= GPIO_TYPE_V2) && !IS_ERR(bank->db_clk);
+	if (debounce && div_debounce_support) {
 		freq = clk_get_rate(bank->db_clk);
 		if (!freq)
 			return -EINVAL;
+
 		div = (u64)(GENMASK(23, 0) + 1) * 1000000;
 		if (bank->gpio_type == GPIO_TYPE_V2)
 			max_debounce = DIV_ROUND_CLOSEST_ULL(div, freq);
@@ -227,8 +228,6 @@ static int rockchip_gpio_set_debounce(struct gpio_chip *gc,
 			div_reg = DIV_ROUND_CLOSEST_ULL(div, USEC_PER_SEC) - 1;
 		else
 			div_reg = DIV_ROUND_CLOSEST_ULL(div, USEC_PER_SEC / 2) - 1;
-	} else {
-		div_debounce_support = false;
 	}
 
 	raw_spin_lock_irqsave(&bank->slock, flags);
@@ -735,6 +734,7 @@ static int rockchip_gpio_probe(struct platform_device *pdev)
 		struct device_node *pctlnp = of_get_parent(dev->of_node);
 
 		pctldev = of_pinctrl_get(pctlnp);
+		of_node_put(pctlnp);
 		if (!pctldev)
 			return -EPROBE_DEFER;
 
