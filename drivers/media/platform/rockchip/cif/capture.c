@@ -980,7 +980,7 @@ cif_input_fmt *rkcif_get_input_fmt(struct rkcif_device *dev, struct v4l2_rect *r
 		if (ch_info.vc >= 0 && ch_info.vc <= 3)
 			csi_info->vc = ch_info.vc;
 		else
-			csi_info->vc = 0xff;
+			csi_info->vc = pad_id;
 		if (ch_info.bus_fmt == MEDIA_BUS_FMT_SPD_2X8 ||
 		    ch_info.bus_fmt == MEDIA_BUS_FMT_EBD_1X8) {
 			if (ch_info.data_type > 0)
@@ -993,7 +993,7 @@ cif_input_fmt *rkcif_get_input_fmt(struct rkcif_device *dev, struct v4l2_rect *r
 		else
 			fmt.format.field = ch_info.field;
 	} else {
-		csi_info->vc = 0xff;
+		csi_info->vc = pad_id;
 	}
 
 	v4l2_dbg(1, rkcif_debug, sd->v4l2_dev,
@@ -11529,18 +11529,21 @@ void rkcif_enable_dma_capture(struct rkcif_stream *stream, bool is_only_enable)
 	if (mbus_cfg->type == V4L2_MBUS_CSI2_DPHY ||
 	    mbus_cfg->type == V4L2_MBUS_CSI2_CPHY) {
 		val = rkcif_read_register(cif_dev, get_reg_index_of_id_ctrl0(stream->id));
-		if (cif_dev->chip_id < CHIP_RK3576_CIF)
+		if (cif_dev->chip_id < CHIP_RK3576_CIF) {
+			val |= CSI_DMA_ENABLE;
 			uncompact = CSI_WRDDR_TYPE_RAW_UNCOMPACT;
-		else
+		} else {
+			val |= CSI_DMA_ENABLE_RK3576;
 			uncompact = CSI_WRDDR_TYPE_RAW_UNCOMPACT << 3;
+			rkcif_write_register(cif_dev, CIF_REG_MIPI_LVDS_INTSTAT,
+					     CSI_START_INTSTAT_RK3576(stream->id));
+			rkcif_write_register_or(cif_dev, CIF_REG_MIPI_LVDS_INTEN,
+						CSI_START_INTEN_RK3576(stream->id));
+		}
 		if (!stream->is_compact)
 			val |= uncompact;
 		else
 			val &= ~uncompact;
-		if (cif_dev->chip_id < CHIP_RK3576_CIF)
-			val |= CSI_DMA_ENABLE;
-		else
-			val |= CSI_DMA_ENABLE_RK3576;
 		rkcif_write_register(cif_dev, get_reg_index_of_id_ctrl0(stream->id), val);
 	} else if (mbus_cfg->type == V4L2_MBUS_CCP2) {
 		val = rkcif_read_register(cif_dev, get_reg_index_of_lvds_id_ctrl0(stream->id));
@@ -11589,10 +11592,13 @@ static int rkcif_stop_dma_capture(struct rkcif_stream *stream)
 	if (mbus_cfg->type == V4L2_MBUS_CSI2_DPHY ||
 	    mbus_cfg->type == V4L2_MBUS_CSI2_CPHY) {
 		val = rkcif_read_register(cif_dev, get_reg_index_of_id_ctrl0(stream->id));
-		if (cif_dev->chip_id < CHIP_RK3576_CIF)
+		if (cif_dev->chip_id < CHIP_RK3576_CIF) {
 			val &= ~CSI_DMA_ENABLE;
-		else
+		} else {
 			val &= ~CSI_DMA_ENABLE_RK3576;
+			rkcif_write_register_and(cif_dev, CIF_REG_MIPI_LVDS_INTEN,
+						~CSI_START_INTEN_RK3576(stream->id));
+		}
 		if (stream->is_stop_capture) {
 			val &= ~CSI_ENABLE_CAPTURE;
 			stream->is_stop_capture = false;
@@ -11944,6 +11950,9 @@ static void rkcif_deal_sof(struct rkcif_device *cif_dev)
 	unsigned long flags;
 	int i = 0;
 	int ret = 0;
+
+	if (cif_dev->chip_id >= CHIP_RK3576_CIF && (!detect_stream->dma_en))
+		return;
 
 	if (cif_dev->chip_id < CHIP_RK3588_CIF)
 		detect_stream->fs_cnt_in_single_frame++;
@@ -12297,7 +12306,7 @@ int rkcif_stream_suspend(struct rkcif_device *cif_dev, int mode)
 			suspend_cnt++;
 			v4l2_dbg(1, rkcif_debug, &cif_dev->v4l2_dev,
 				 "stream[%d] stopping\n", stream->id);
-			if (stream->dma_en) {
+			if (!cif_dev->is_sensor_off) {
 				stream->stopping = true;
 				ret = wait_event_timeout(stream->wq_stopped,
 							 stream->state != RKCIF_STATE_STREAMING,
