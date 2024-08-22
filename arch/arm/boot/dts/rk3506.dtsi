@@ -320,8 +320,7 @@
 		ranges;
 
 		trust@0 {
-			reg = <0x00000 0xa1000>;
-			no-map;
+			reg = <0x0 0x62000>;
 		};
 
 		cma: linux,cma {
@@ -336,12 +335,12 @@
 			reg = <0x0 0x0>;
 		};
 
-		ramoops: ramoops@a1000 {
+		ramoops: ramoops@83000 {
 			compatible = "ramoops";
-			reg = <0xa1000 0x5f000>;
-			boot-log-size = <0xf000>;	/* do not change */
+			reg = <0x83000 0x2d000>;
+			boot-log-size = <0xd000>;	/* do not change */
 			boot-log-count = <0x1>;		/* do not change */
-			console-size = <0x50000>;
+			console-size = <0x20000>;
 			pmsg-size = <0x0>;
 			ftrace-size = <0x0>;
 			record-size = <0x0>;
@@ -1423,6 +1422,10 @@
 		clocks = <&cru ACLK_DSMC_SLV>,
 			 <&cru HCLK_DSMC_SLV>;
 		clock-names = "aclk_dsmc_slv", "hclk_dsmc_slv";
+		pinctrl-names = "default", "active";
+		pinctrl-0 = <&dsmc_slv_csn0_pull_pins
+			     &dsmc_slv_bus8_pins>;
+		pinctrl-1 = <&dsmc_slv_csn0_pins>;
 		status = "disabled";
 	};
 
@@ -1431,7 +1434,7 @@
 		reg = <0xff8b0000 0x10000>;
 		#address-cells = <1>;
 		#size-cells = <1>;
-		rockchip,grf = <&ioc_grf>;
+		rockchip,grf = <&grf>;
 		interrupts = <GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH>;
 		resets = <&cru SRST_A_DSMC>, <&cru SRST_P_DSMC>;
 		reset-names = "dsmc", "apb";
@@ -1446,12 +1449,18 @@
 	//	dmas = <&dmac0 8  0xff288078 0x80008000 0xff2880ac 0x00030000>,
 	//	       <&dmac0 10 0xff288078 0x40004000 0xff2880ac 0x00300000>;
 		dma-names = "req0", "req1";
+		pinctrl-names = "default", "active" ,"lb-slave";
+		pinctrl-0 = <&dsmc_csn_pull_pins
+			     &dsmc_bus16_pins
+			     &dsmc_clk_pins>;
+		pinctrl-1 = <&dsmc_csn_pins>;
+		pinctrl-2 = <&dsmc_int_pins>;
 		status = "disabled";
 		slave {
-			rockchip,dqs-dll = <0x40 0x40
-					    0x40 0x40
-					    0x40 0x40
-					    0x40 0x40>;
+			rockchip,dqs-dll = <0x20 0x20
+					    0x20 0x20
+					    0x20 0x20
+					    0x20 0x20>;
 			rockchip,ranges = <0x0 0xc0000000 0x0 0x2000000>;
 			rockchip,slave-dev = <&dsmc_slave>;
 		};
@@ -1478,6 +1487,8 @@
 
 		lb-slave {
 			dsmc_lb_slave0: lb-slave0 {
+				rockchip,mtr-timing = <1 0 0 0 0 0 2 2>;
+				rockchip,int-en = <0x0>;
 				status = "disabled";
 				dsmc_p0_region: region {
 					dsmc_p0_region0: region0 {
@@ -1515,6 +1526,8 @@
 				};
 			};
 			dsmc_lb_slave1: lb-slave1 {
+				rockchip,mtr-timing = <1 0 0 0 0 0 2 2>;
+				rockchip,int-en = <0x1>;
 				status = "disabled";
 				dsmc_p1_region: region {
 					dsmc_p1_region0: region0 {
@@ -1552,6 +1565,8 @@
 				};
 			};
 			dsmc_lb_slave2: lb-slave2 {
+				rockchip,mtr-timing = <1 0 0 0 0 0 2 2>;
+				rockchip,int-en = <0x2>;
 				status = "disabled";
 				dsmc_p2_region: region {
 					dsmc_p2_region0: region0 {
@@ -1589,6 +1604,8 @@
 				};
 			};
 			dsmc_lb_slave3: lb-slave3 {
+				rockchip,mtr-timing = <1 0 0 0 0 0 2 2>;
+				rockchip,int-en = <0x3>;
 				status = "disabled";
 				dsmc_p3_region: region {
 					dsmc_p3_region0: region0 {
