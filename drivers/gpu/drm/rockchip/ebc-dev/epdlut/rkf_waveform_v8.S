@@ -878,7 +878,7 @@ parse_wf_data:
 	.loc	2 229 14 is_stmt 1
 	add	x9, x8, x9, lsl #2
 .Ltmp169:
-	.loc	4 558 9
+	.loc	4 561 9
 	mov	w1, #3520
 .Ltmp170:
 	.loc	2 229 14
@@ -897,7 +897,7 @@ parse_wf_data:
 .Ltmp174:
 	and	x22, x8, #0x7c
 .Ltmp175:
-	.loc	4 558 9 is_stmt 1
+	.loc	4 561 9 is_stmt 1
 	mov	x0, x22
 	bl	__kmalloc
 .Ltmp176:
@@ -917,13 +917,13 @@ parse_wf_data:
 	.loc	2 265 27 is_stmt 1
 	lsl	w8, w23, #6
 .Ltmp180:
-	.loc	4 558 9
+	.loc	4 561 9
 	mov	w1, #3520
 .Ltmp181:
 	.loc	2 265 27
 	and	w0, w8, #0x7c00
 .Ltmp182:
-	.loc	4 558 9
+	.loc	4 561 9
 	bl	__kmalloc
 .Ltmp183:
 	.loc	2 266 6
@@ -5962,7 +5962,7 @@ rkf_wf_get_lut.sftemp:
 	.word	.Linfo_string64
 	.byte	4
 	.byte	4
-	.hword	332
+	.hword	335
 	.byte	14
 	.word	.Linfo_string59
 	.byte	0
@@ -6299,7 +6299,7 @@ rkf_wf_get_lut.sftemp:
 	.byte	45
 	.word	.Linfo_string93
 	.byte	4
-	.byte	196
+	.byte	197
 
 
 
@@ -6459,7 +6459,7 @@ rkf_wf_get_lut.sftemp:
 	.word	4749
 	.word	.Ldebug_ranges9
 	.byte	4
-	.hword	689
+	.hword	692
 	.byte	9
 	.byte	7
 	.word	.Ldebug_loc55
@@ -6531,7 +6531,7 @@ rkf_wf_get_lut.sftemp:
 	.word	4749
 	.word	.Ldebug_ranges12
 	.byte	4
-	.hword	689
+	.hword	692
 	.byte	9
 	.byte	7
 	.word	.Ldebug_loc58
@@ -7435,25 +7435,25 @@ rkf_wf_get_lut.sftemp:
 	.byte	42
 	.word	.Linfo_string114
 	.byte	4
-	.hword	539
+	.hword	542
 
 	.word	1183
 	.byte	1
 	.byte	43
 	.word	.Linfo_string115
 	.byte	4
-	.hword	539
+	.hword	542
 	.word	4801
 	.byte	43
 	.word	.Linfo_string120
 	.byte	4
-	.hword	539
+	.hword	542
 	.word	1167
 	.byte	56
 	.byte	44
 	.word	.Linfo_string121
 	.byte	4
-	.hword	543
+	.hword	546
 	.word	585
 	.byte	0
 	.byte	0
@@ -7479,19 +7479,19 @@ rkf_wf_get_lut.sftemp:
 	.byte	42
 	.word	.Linfo_string122
 	.byte	4
-	.hword	687
+	.hword	690
 
 	.word	1183
 	.byte	1
 	.byte	43
 	.word	.Linfo_string115
 	.byte	4
-	.hword	687
+	.hword	690
 	.word	4801
 	.byte	43
 	.word	.Linfo_string120
 	.byte	4
-	.hword	687
+	.hword	690
 	.word	1167
 	.byte	0
 	.byte	30
@@ -8080,13 +8080,13 @@ rkf_wf_get_lut.sftemp:
 .Linfo_string109:
 	.asciz	"level"
 .Linfo_string110:
-	.asciz	"__UNIQUE_ID___x346"
+	.asciz	"__UNIQUE_ID___x347"
 .Linfo_string111:
-	.asciz	"__UNIQUE_ID___y347"
+	.asciz	"__UNIQUE_ID___y348"
 .Linfo_string112:
-	.asciz	"__UNIQUE_ID___y349"
+	.asciz	"__UNIQUE_ID___y350"
 .Linfo_string113:
-	.asciz	"__UNIQUE_ID___x348"
+	.asciz	"__UNIQUE_ID___x349"
 .Linfo_string114:
 	.asciz	"kmalloc"
 .Linfo_string115:

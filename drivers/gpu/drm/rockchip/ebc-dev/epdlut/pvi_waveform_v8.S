@@ -933,21 +933,21 @@ pvi_wf_get_lut:
 .Ltmp187:
 	tbnz	w11, #0, .LBB0_134
 .Ltmp188:
-	add	x13, x8, #989
+	add	x13, x8, #29
 	add	x14, x13, x12
 	cmp	x14, x13
 	b.lo	.LBB0_134
 .Ltmp189:
 	tbnz	w11, #0, .LBB0_134
 .Ltmp190:
-	add	x13, x8, #29
+	add	x13, x8, #31
 	add	x14, x13, x12
 	cmp	x14, x13
 	b.lo	.LBB0_134
 .Ltmp191:
 	tbnz	w11, #0, .LBB0_134
 .Ltmp192:
-	add	x13, x8, #31
+	add	x13, x8, #989
 	add	x12, x13, x12
 	cmp	x12, x13
 	b.lo	.LBB0_134
@@ -971,65 +971,66 @@ pvi_wf_get_lut:
 	add	x13, x8, w11, sxtw
 	add	x14, x8, w14, sxtw
 	ldrb	w15, [x13, #30]
+	strb	wzr, [x13, #989]
 	ldrb	w16, [x14, #30]
+	strb	wzr, [x14, #989]
 	strb	w15, [x13, #31]
 	strb	w15, [x13, #29]
 	strb	w16, [x14, #31]
 	strb	w16, [x14, #29]
 	cbz	w22, .LBB0_130
 .Ltmp197:
-	.loc	3 352 7 is_stmt 1
 	add	x15, x14, #1021
 	add	x16, x13, #1021
-	strb	wzr, [x14, #989]
-	strb	wzr, [x13, #989]
-	strh	wzr, [x15]
-	strh	wzr, [x16]
+.Ltmp198:
+	.loc	3 352 7 is_stmt 1
 	strh	wzr, [x14, #958]
 	strh	wzr, [x13, #958]
+	strh	wzr, [x15]
+	strh	wzr, [x16]
 	b	.LBB0_130
-.Ltmp198:
+.Ltmp199:
 .LBB0_133:
 	.loc	3 347 2
 	cmp	x10, x9
 	b.eq	.LBB0_67
-.Ltmp199:
+.Ltmp200:
 .LBB0_134:
 	sub	x9, x9, x10
 	lsl	w10, w10, #10
 	b	.LBB0_136
-.Ltmp200:
+.Ltmp201:
 .LBB0_135:
 	.loc	3 347 16 is_stmt 0
 	subs	x9, x9, #1
 	add	w10, w10, #1024
-.Ltmp201:
+.Ltmp202:
 	.loc	3 347 2
 	b.eq	.LBB0_67
-.Ltmp202:
+.Ltmp203:
 .LBB0_136:
 	.loc	3 348 20 is_stmt 1
 	add	x11, x8, w10, sxtw
-.Ltmp203:
+.Ltmp204:
 	.loc	3 350 38
 	ldrb	w12, [x11, #30]
-	.loc	3 350 36 is_stmt 0
+	.loc	3 349 36
+	strb	wzr, [x11, #989]
+	.loc	3 350 36
 	strb	w12, [x11, #31]
-	.loc	3 351 36 is_stmt 1
+	.loc	3 351 36
 	strb	w12, [x11, #29]
 	.loc	3 352 7
 	cbz	w22, .LBB0_135
-.Ltmp204:
+.Ltmp205:
 	.loc	3 355 4
 	add	x12, x11, #1021
-	.loc	3 353 37
-	strb	wzr, [x11, #989]
 	.loc	3 358 37
 	strh	wzr, [x11, #958]
 	.loc	3 355 37
 	strh	wzr, [x12]
 	b	.LBB0_135
-.Ltmp205:
+.Ltmp206:
 .Lfunc_end0:
 	.size	pvi_wf_get_lut, .Lfunc_end0-pvi_wf_get_lut
 	.cfi_endproc
@@ -1212,23 +1213,23 @@ get_wf_frm_num:
 	.cfi_offset w24, -48
 	.cfi_offset w30, -56
 	.cfi_offset w29, -64
-.Ltmp206:
+.Ltmp207:
 	.loc	3 219 45 prologue_end
 	adrp	x8, global_waveform
 	.loc	3 223 37
 	lsl	w9, w0, #2
 	.loc	3 219 45
 	ldr	x14, [x8, :lo12:global_waveform]
-.Ltmp207:
+.Ltmp208:
 	.loc	3 221 32
 	ldrb	w8, [x14, #32]
-.Ltmp208:
+.Ltmp209:
 	.loc	3 223 21
 	add	x8, x14, x8
-.Ltmp209:
+.Ltmp210:
 	.loc	3 223 30 is_stmt 0
 	add	x8, x8, x9
-.Ltmp210:
+.Ltmp211:
 	.loc	3 224 22 is_stmt 1
 	ldrb	w9, [x8]
 	.loc	3 224 35 is_stmt 0
@@ -1241,25 +1242,25 @@ get_wf_frm_num:
 	add	w9, w10, w9
 	.loc	3 224 46
 	add	w9, w9, w11
-.Ltmp211:
+.Ltmp212:
 	.loc	3 224 6
 	cmp	w12, w9, uxtb
 	b.ne	.LBB1_26
-.Ltmp212:
+.Ltmp213:
 	.loc	3 0 6
 	ldr	w8, [x8]
-.Ltmp213:
+.Ltmp214:
 	.loc	3 230 43 is_stmt 1
 	lsl	w9, w1, #2
 	.loc	3 228 28
 	and	x8, x8, #0xffffff
-.Ltmp214:
+.Ltmp215:
 	.loc	3 230 21
 	add	x8, x14, x8
-.Ltmp215:
+.Ltmp216:
 	.loc	3 230 30 is_stmt 0
 	add	x9, x8, w9, sxtw
-.Ltmp216:
+.Ltmp217:
 	.loc	3 231 22 is_stmt 1
 	ldrb	w8, [x9]
 	.loc	3 231 35 is_stmt 0
@@ -1272,91 +1273,91 @@ get_wf_frm_num:
 	add	w8, w10, w8
 	.loc	3 231 46
 	add	w8, w8, w11
-.Ltmp217:
+.Ltmp218:
 	.loc	3 231 6
 	cmp	w12, w8, uxtb
 	b.ne	.LBB1_27
-.Ltmp218:
+.Ltmp219:
 	.loc	3 55 7 is_stmt 1
 	adrp	x20, waveformdata
 	ldr	x10, [x20, :lo12:waveformdata]
-.Ltmp219:
+.Ltmp220:
 	.loc	3 55 6 is_stmt 0
 	cbz	x10, .LBB1_29
-.Ltmp220:
+.Ltmp221:
 	.loc	3 0 6
 	adrp	x21, need_pic
-.Ltmp221:
+.Ltmp222:
 	.loc	3 60 6 is_stmt 1
 	adrp	x22, maxpic
 	ldr	w15, [x9]
 	mov	w16, #5
 	mov	w0, #32
-.Ltmp222:
+.Ltmp223:
 	.loc	3 0 6 is_stmt 0
 	mov	w13, wzr
 	ldr	w8, [x21, :lo12:need_pic]
 	mov	w11, wzr
 	.loc	3 60 6
 	ldrb	w9, [x22, :lo12:maxpic]
-.Ltmp223:
+.Ltmp224:
 	.loc	3 0 0
 	and	x15, x15, #0xffffff
-.Ltmp224:
-	add	x14, x14, x15
 .Ltmp225:
+	add	x14, x14, x15
+.Ltmp226:
 	mov	w19, wzr
 	cmp	w8, #32
 	mov	w12, wzr
 	cset	w17, eq
 	bics	w15, w17, w9
-.Ltmp226:
+.Ltmp227:
 	mov	w17, #16
 	cinc	w16, w16, ne
 	cmp	w9, #0
 	csel	w17, w0, w17, ne
 	mov	w0, #1
-.Ltmp227:
-	b	.LBB1_6
 .Ltmp228:
+	b	.LBB1_6
+.Ltmp229:
 .LBB1_4:
 	mov	w0, #1
-.Ltmp229:
+.Ltmp230:
 .LBB1_5:
 	add	w11, w11, #1
-.Ltmp230:
+.Ltmp231:
 	.loc	3 64 7 is_stmt 1
 	cmp	w19, #254
 	b.hi	.LBB1_18
-.Ltmp231:
+.Ltmp232:
 .LBB1_6:
 	.loc	3 69 7
 	ldrb	w3, [x14, w11, uxtw]
-.Ltmp232:
+.Ltmp233:
 	.loc	3 69 7 is_stmt 0
 	cmp	w3, #252
 	b.eq	.LBB1_11
-.Ltmp233:
+.Ltmp234:
 	cmp	w3, #255
 	b.eq	.LBB1_19
-.Ltmp234:
+.Ltmp235:
 	.loc	3 79 7 is_stmt 1
 	tbnz	w0, #0, .LBB1_12
-.Ltmp235:
+.Ltmp236:
 .LBB1_9:
 	.loc	3 114 44
 	add	w0, w13, #1
-.Ltmp236:
+.Ltmp237:
 	.loc	3 114 75 is_stmt 0
 	lsl	w1, w12, w15
-.Ltmp237:
+.Ltmp238:
 	.loc	3 114 47
 	lsl	w2, w13, w16
 	.loc	3 114 35
 	add	w1, w1, w19, lsl #10
 	.loc	3 115 47 is_stmt 1
 	lsl	w0, w0, w16
-.Ltmp238:
+.Ltmp239:
 	.loc	3 114 65
 	add	w2, w1, w2
 	.loc	3 115 65
@@ -1369,17 +1370,17 @@ get_wf_frm_num:
 	strb	w4, [x10, w2, uxtw]
 	.loc	3 115 44
 	add	w2, w13, #2
-.Ltmp239:
+.Ltmp240:
 	.loc	3 115 88 is_stmt 0
 	strb	w5, [x10, w0, uxtw]
 	.loc	3 116 44 is_stmt 1
 	add	w0, w13, #3
-.Ltmp240:
+.Ltmp241:
 	.loc	3 116 47 is_stmt 0
 	lsl	w2, w2, w16
 	.loc	3 117 47 is_stmt 1
 	lsl	w0, w0, w16
-.Ltmp241:
+.Ltmp242:
 	.loc	3 116 65
 	add	w2, w1, w2
 	.loc	3 117 65
@@ -1390,51 +1391,51 @@ get_wf_frm_num:
 	lsr	w1, w3, #6
 	.loc	3 117 44 is_stmt 0
 	add	w13, w13, #4
-.Ltmp242:
+.Ltmp243:
 	.loc	3 116 88 is_stmt 1
 	strb	w4, [x10, w2, uxtw]
 	.loc	3 120 8
 	cmp	w13, w17
 	.loc	3 117 88
 	strb	w1, [x10, w0, uxtw]
-.Ltmp243:
+.Ltmp244:
 	.loc	3 0 88 is_stmt 0
 	mov	w0, wzr
 	.loc	3 120 8 is_stmt 1
 	b.lo	.LBB1_5
-.Ltmp244:
+.Ltmp245:
 	.loc	3 122 9
 	add	w1, w12, #1
-.Ltmp245:
+.Ltmp246:
 	.loc	3 0 9 is_stmt 0
 	mov	w13, wzr
 	.loc	3 122 18
 	cmp	w1, w17
-.Ltmp246:
+.Ltmp247:
 	.loc	3 122 9
 	csinc	w12, wzr, w12, hs
 	cinc	w19, w19, hs
-.Ltmp247:
+.Ltmp248:
 	.loc	3 0 9
 	b	.LBB1_5
-.Ltmp248:
+.Ltmp249:
 .LBB1_11:
 	.loc	3 76 10 is_stmt 1
 	add	w11, w11, #1
-.Ltmp249:
+.Ltmp250:
 	.loc	3 0 0 is_stmt 0
 	ldrb	w3, [x14, w11, uxtw]
-.Ltmp250:
+.Ltmp251:
 	.loc	3 79 7 is_stmt 1
 	tbnz	w0, #0, .LBB1_9
-.Ltmp251:
+.Ltmp252:
 .LBB1_12:
 	.loc	3 81 44
 	add	w0, w13, #1
-.Ltmp252:
+.Ltmp253:
 	.loc	3 81 75 is_stmt 0
 	lsl	w1, w12, w15
-.Ltmp253:
+.Ltmp254:
 	.loc	3 81 47
 	lsl	w2, w13, w16
 	.loc	3 81 35
@@ -1447,24 +1448,24 @@ get_wf_frm_num:
 	add	w5, w4, w1
 	.loc	3 81 99
 	and	w0, w3, #0x3
-.Ltmp254:
+.Ltmp255:
 	.loc	3 82 106
 	ubfx	w1, w3, #2, #2
 	.loc	3 81 88
 	strb	w0, [x10, w2, uxtw]
 	.loc	3 82 44
 	add	w2, w13, #2
-.Ltmp255:
+.Ltmp256:
 	.loc	3 82 88 is_stmt 0
 	strb	w1, [x10, w5, uxtw]
 	.loc	3 83 44 is_stmt 1
 	add	w5, w13, #3
-.Ltmp256:
+.Ltmp257:
 	.loc	3 83 47 is_stmt 0
 	lsl	w2, w2, w16
 	.loc	3 84 47 is_stmt 1
 	lsl	w5, w5, w16
-.Ltmp257:
+.Ltmp258:
 	.loc	3 83 65
 	add	w6, w4, w2
 	.loc	3 83 106 is_stmt 0
@@ -1473,64 +1474,64 @@ get_wf_frm_num:
 	add	w4, w4, w5
 	.loc	3 84 100 is_stmt 0
 	lsr	w3, w3, #6
-.Ltmp258:
+.Ltmp259:
 	.loc	3 84 44
 	add	w13, w13, #4
-.Ltmp259:
+.Ltmp260:
 	.loc	3 87 8 is_stmt 1
 	cmp	w13, w17
 	.loc	3 83 88
 	strb	w2, [x10, w6, uxtw]
 	.loc	3 84 88
 	strb	w3, [x10, w4, uxtw]
-.Ltmp260:
+.Ltmp261:
 	.loc	3 87 8
 	b.lo	.LBB1_14
-.Ltmp261:
+.Ltmp262:
 	.loc	3 89 9
 	add	w4, w12, #1
-.Ltmp262:
+.Ltmp263:
 	.loc	3 0 9 is_stmt 0
 	mov	w13, wzr
 	.loc	3 89 18
 	cmp	w4, w17
-.Ltmp263:
+.Ltmp264:
 	.loc	3 89 9
 	csinc	w12, wzr, w12, hs
 	cinc	w19, w19, hs
-.Ltmp264:
+.Ltmp265:
 .LBB1_14:
 	.loc	3 0 0
 	add	w11, w11, #1
-.Ltmp265:
+.Ltmp266:
 	.loc	3 95 8 is_stmt 1
 	ldrb	w4, [x14, w11, uxtw]
-.Ltmp266:
+.Ltmp267:
 	.loc	3 96 4
 	cbnz	w4, .LBB1_16
 	b	.LBB1_4
-.Ltmp267:
+.Ltmp268:
 .LBB1_15:
 	.loc	3 96 19 is_stmt 0
 	sub	w4, w4, #1
-.Ltmp268:
-	tst	w4, #0xff
 .Ltmp269:
+	tst	w4, #0xff
+.Ltmp270:
 	.loc	3 96 4
 	b.eq	.LBB1_4
-.Ltmp270:
+.Ltmp271:
 .LBB1_16:
 	.loc	3 97 45 is_stmt 1
 	add	w5, w13, #1
-.Ltmp271:
+.Ltmp272:
 	.loc	3 97 76 is_stmt 0
 	lsl	w6, w12, w15
 	.loc	3 98 45 is_stmt 1
 	add	w23, w13, #2
-.Ltmp272:
+.Ltmp273:
 	.loc	3 99 45
 	add	w24, w13, #3
-.Ltmp273:
+.Ltmp274:
 	.loc	3 97 48
 	lsl	w7, w13, w16
 	.loc	3 97 36 is_stmt 0
@@ -1541,7 +1542,7 @@ get_wf_frm_num:
 	lsl	w23, w23, w16
 	.loc	3 100 48
 	lsl	w24, w24, w16
-.Ltmp274:
+.Ltmp275:
 	.loc	3 97 66
 	add	w7, w6, w7
 	.loc	3 98 66
@@ -1552,7 +1553,7 @@ get_wf_frm_num:
 	add	w6, w6, w24
 	.loc	3 100 45 is_stmt 0
 	add	w13, w13, #4
-.Ltmp275:
+.Ltmp276:
 	.loc	3 101 9 is_stmt 1
 	cmp	w13, w17
 	.loc	3 97 89
@@ -1565,42 +1566,42 @@ get_wf_frm_num:
 	strb	w3, [x10, w6, uxtw]
 	.loc	3 101 9
 	b.lo	.LBB1_15
-.Ltmp276:
+.Ltmp277:
 	.loc	3 103 10
 	add	w5, w12, #1
-.Ltmp277:
+.Ltmp278:
 	.loc	3 0 10 is_stmt 0
 	mov	w13, wzr
 	.loc	3 103 19
 	cmp	w5, w17
-.Ltmp278:
+.Ltmp279:
 	.loc	3 103 10
 	csinc	w12, wzr, w12, hs
 	cinc	w19, w19, hs
-.Ltmp279:
+.Ltmp280:
 	.loc	3 0 10
 	b	.LBB1_15
-.Ltmp280:
+.Ltmp281:
 .LBB1_18:
 	.loc	3 65 4 is_stmt 1
 	adrp	x0, .L.str.6
 	add	x0, x0, :lo12:.L.str.6
 	bl	_printk
-.Ltmp281:
+.Ltmp282:
 	.loc	3 130 6
 	ldrb	w9, [x22, :lo12:maxpic]
 	ldr	w8, [x21, :lo12:need_pic]
-.Ltmp282:
+.Ltmp283:
 .LBB1_19:
 	.loc	3 130 24 is_stmt 0
 	cbz	w9, .LBB1_31
-.Ltmp283:
+.Ltmp284:
 	cmp	w8, #16
 	b.ne	.LBB1_31
-.Ltmp284:
+.Ltmp285:
 	.loc	3 132 3 is_stmt 1
 	cbz	w19, .LBB1_31
-.Ltmp285:
+.Ltmp286:
 	.loc	3 0 3 is_stmt 0
 	ldr	x11, [x20, :lo12:waveformdata]
 	mov	w8, wzr
@@ -1608,176 +1609,176 @@ get_wf_frm_num:
 	.loc	3 132 3
 	add	x10, x11, #16
 	add	x11, x11, #7
-.Ltmp286:
+.Ltmp287:
 .LBB1_23:
 	.loc	3 0 3
 	mov	w13, w8
 	mov	x14, #-2
-.Ltmp287:
+.Ltmp288:
 	add	x12, x10, x13
 	and	x13, x13, #0xffffffe0
 	add	x13, x11, x13
-.Ltmp288:
+.Ltmp289:
 .LBB1_24:
 	.loc	3 135 17 is_stmt 1
 	ldurb	w15, [x12, #-16]
-.Ltmp289:
+.Ltmp290:
 	.loc	3 133 28
 	add	x14, x14, #2
-.Ltmp290:
+.Ltmp291:
 	.loc	3 133 4 is_stmt 0
 	cmp	x14, #30
-.Ltmp291:
+.Ltmp292:
 	.loc	3 136 61 is_stmt 1
 	sturb	w15, [x13, #-7]
-.Ltmp292:
+.Ltmp293:
 	.loc	3 135 17
 	ldurb	w15, [x12, #-14]
-.Ltmp293:
+.Ltmp294:
 	.loc	3 136 61
 	sturb	w15, [x13, #-6]
-.Ltmp294:
+.Ltmp295:
 	.loc	3 135 17
 	ldurb	w15, [x12, #-12]
-.Ltmp295:
+.Ltmp296:
 	.loc	3 136 61
 	sturb	w15, [x13, #-5]
-.Ltmp296:
+.Ltmp297:
 	.loc	3 135 17
 	ldurb	w15, [x12, #-10]
-.Ltmp297:
+.Ltmp298:
 	.loc	3 136 61
 	sturb	w15, [x13, #-4]
-.Ltmp298:
+.Ltmp299:
 	.loc	3 135 17
 	ldurb	w15, [x12, #-8]
-.Ltmp299:
+.Ltmp300:
 	.loc	3 136 61
 	sturb	w15, [x13, #-3]
-.Ltmp300:
+.Ltmp301:
 	.loc	3 135 17
 	ldurb	w15, [x12, #-6]
-.Ltmp301:
+.Ltmp302:
 	.loc	3 136 61
 	sturb	w15, [x13, #-2]
-.Ltmp302:
+.Ltmp303:
 	.loc	3 135 17
 	ldurb	w15, [x12, #-4]
-.Ltmp303:
+.Ltmp304:
 	.loc	3 136 61
 	sturb	w15, [x13, #-1]
-.Ltmp304:
+.Ltmp305:
 	.loc	3 135 17
 	ldurb	w15, [x12, #-2]
-.Ltmp305:
+.Ltmp306:
 	.loc	3 136 61
 	strb	w15, [x13]
-.Ltmp306:
+.Ltmp307:
 	.loc	3 135 17
 	ldrb	w15, [x12]
-.Ltmp307:
+.Ltmp308:
 	.loc	3 136 61
 	strb	w15, [x13, #1]
-.Ltmp308:
+.Ltmp309:
 	.loc	3 135 17
 	ldrb	w15, [x12, #2]
-.Ltmp309:
+.Ltmp310:
 	.loc	3 136 61
 	strb	w15, [x13, #2]
-.Ltmp310:
+.Ltmp311:
 	.loc	3 135 17
 	ldrb	w15, [x12, #4]
-.Ltmp311:
+.Ltmp312:
 	.loc	3 136 61
 	strb	w15, [x13, #3]
-.Ltmp312:
+.Ltmp313:
 	.loc	3 135 17
 	ldrb	w15, [x12, #6]
-.Ltmp313:
+.Ltmp314:
 	.loc	3 136 61
 	strb	w15, [x13, #4]
-.Ltmp314:
+.Ltmp315:
 	.loc	3 135 17
 	ldrb	w15, [x12, #8]
-.Ltmp315:
+.Ltmp316:
 	.loc	3 136 61
 	strb	w15, [x13, #5]
-.Ltmp316:
+.Ltmp317:
 	.loc	3 135 17
 	ldrb	w15, [x12, #10]
-.Ltmp317:
+.Ltmp318:
 	.loc	3 136 61
 	strb	w15, [x13, #6]
-.Ltmp318:
+.Ltmp319:
 	.loc	3 135 17
 	ldrb	w15, [x12, #12]
-.Ltmp319:
+.Ltmp320:
 	.loc	3 136 61
 	strb	w15, [x13, #7]
-.Ltmp320:
+.Ltmp321:
 	.loc	3 135 17
 	ldrb	w15, [x12, #14]
-.Ltmp321:
+.Ltmp322:
 	.loc	3 133 28
 	add	x12, x12, #64
-.Ltmp322:
+.Ltmp323:
 	.loc	3 136 61
 	strb	w15, [x13, #8]
-.Ltmp323:
+.Ltmp324:
 	.loc	3 133 28
 	add	x13, x13, #32
-.Ltmp324:
+.Ltmp325:
 	.loc	3 133 4 is_stmt 0
 	b.lo	.LBB1_24
-.Ltmp325:
+.Ltmp326:
 	.loc	3 132 31 is_stmt 1
 	add	w9, w9, #1
-.Ltmp326:
+.Ltmp327:
 	.loc	3 132 3 is_stmt 0
 	add	w8, w8, #1024
-.Ltmp327:
+.Ltmp328:
 	cmp	w19, w9, uxtb
 	b.hi	.LBB1_23
 	b	.LBB1_31
-.Ltmp328:
+.Ltmp329:
 .LBB1_26:
 	.loc	3 225 3 is_stmt 1
 	adrp	x0, .L.str.4
-.Ltmp329:
-	adrp	x1, .L__func__.get_wf_frm_num
 .Ltmp330:
+	adrp	x1, .L__func__.get_wf_frm_num
+.Ltmp331:
 	add	x0, x0, :lo12:.L.str.4
 	add	x1, x1, :lo12:.L__func__.get_wf_frm_num
 	mov	w2, #225
 	b	.LBB1_28
-.Ltmp331:
+.Ltmp332:
 .LBB1_27:
 	.loc	3 232 3
 	adrp	x0, .L.str.4
-.Ltmp332:
-	adrp	x1, .L__func__.get_wf_frm_num
 .Ltmp333:
+	adrp	x1, .L__func__.get_wf_frm_num
+.Ltmp334:
 	add	x0, x0, :lo12:.L.str.4
 	add	x1, x1, :lo12:.L__func__.get_wf_frm_num
 	mov	w2, #232
-.Ltmp334:
+.Ltmp335:
 .LBB1_28:
 	.loc	3 0 0 is_stmt 0
 	bl	_printk
-.Ltmp335:
-	b	.LBB1_30
 .Ltmp336:
+	b	.LBB1_30
+.Ltmp337:
 .LBB1_29:
 	.loc	3 56 3 is_stmt 1
 	adrp	x0, .L.str.5
-.Ltmp337:
+.Ltmp338:
 	add	x0, x0, :lo12:.L.str.5
 	bl	_printk
-.Ltmp338:
+.Ltmp339:
 .LBB1_30:
 	.loc	3 0 3 is_stmt 0
 	mov	w19, #-22
-.Ltmp339:
+.Ltmp340:
 .LBB1_31:
 	.loc	3 239 1 is_stmt 1
 	mov	w0, w19
@@ -1787,7 +1788,7 @@ get_wf_frm_num:
 	ldp	x29, x30, [sp], #64
 	ldr	x30, [x18, #-8]!
 	ret
-.Ltmp340:
+.Ltmp341:
 .Lfunc_end1:
 	.size	get_wf_frm_num, .Lfunc_end1-get_wf_frm_num
 	.cfi_endproc
@@ -1810,41 +1811,41 @@ pvi_wf_input:
 	.cfi_offset w20, -16
 	.cfi_offset w30, -24
 	.cfi_offset w29, -32
-.Ltmp341:
+.Ltmp342:
 	.loc	3 441 6 prologue_end
 	adrp	x20, global_waveform
 	ldr	x8, [x20, :lo12:global_waveform]
-.Ltmp342:
+.Ltmp343:
 	.loc	3 441 6 is_stmt 0
 	cbz	x8, .LBB2_3
-.Ltmp343:
+.Ltmp344:
 	.loc	3 0 6
 	mov	w0, #-16
-.Ltmp344:
+.Ltmp345:
 .LBB2_2:
 	.loc	3 471 1 is_stmt 1
 	ldp	x20, x19, [sp, #16]
 	ldp	x29, x30, [sp], #32
 	ldr	x30, [x18, #-8]!
 	ret
-.Ltmp345:
+.Ltmp346:
 .LBB2_3:
 	.loc	3 0 1 is_stmt 0
 	mov	x19, x0
-.Ltmp346:
+.Ltmp347:
 	.loc	3 444 2 is_stmt 1
 	ldrb	w1, [x0, #16]
 	adrp	x0, .L.str.1
 	add	x0, x0, :lo12:.L.str.1
 	bl	_printk
-.Ltmp347:
+.Ltmp348:
 	.loc	3 447 18
 	ldrb	w1, [x19, #16]
 	.loc	3 447 2 is_stmt 0
 	sub	w8, w1, #9
 	cmp	w8, #105
 	b.hi	.LBB2_7
-.Ltmp348:
+.Ltmp349:
 	.loc	3 0 2
 	adrp	x9, .LJTI2_0
 	add	x9, x9, :lo12:.LJTI2_0
@@ -1852,31 +1853,31 @@ pvi_wf_input:
 	ldrb	w11, [x9, x8]
 	add	x10, x10, x11, lsl #2
 	br	x10
-.Ltmp349:
+.Ltmp350:
 .LBB2_5:
 	.loc	3 455 10 is_stmt 1
 	adrp	x8, maxpic
 	mov	w9, #1
 	strb	w9, [x8, :lo12:maxpic]
-.Ltmp350:
+.Ltmp351:
 .LBB2_6:
 	.loc	3 0 10 is_stmt 0
 	mov	w0, wzr
 	.loc	3 468 18 is_stmt 1
 	str	x19, [x20, :lo12:global_waveform]
 	b	.LBB2_2
-.Ltmp351:
+.Ltmp352:
 .LBB2_7:
 	.loc	3 463 3
 	adrp	x0, .L.str.2
 	ldrb	w2, [x19, #22]
 	add	x0, x0, :lo12:.L.str.2
 	bl	_printk
-.Ltmp352:
+.Ltmp353:
 	.loc	3 0 3 is_stmt 0
 	mov	w0, #-8
 	b	.LBB2_2
-.Ltmp353:
+.Ltmp354:
 .Lfunc_end2:
 	.size	pvi_wf_input, .Lfunc_end2-pvi_wf_input
 	.cfi_endproc
@@ -2000,10 +2001,10 @@ pvi_wf_get_version:
 	.loc	3 481 39 prologue_end
 	adrp	x8, global_waveform
 	ldr	x8, [x8, :lo12:global_waveform]
-.Ltmp354:
+.Ltmp355:
 	.loc	3 484 6
 	cbz	x8, .LBB3_2
-.Ltmp355:
+.Ltmp356:
 	.loc	3 487 2
 	adrp	x0, pvi_wf_get_version.spi_id_buffer
 	ldur	x9, [x8, #73]
@@ -2011,7 +2012,7 @@ pvi_wf_get_version:
 	add	x0, x0, :lo12:pvi_wf_get_version.spi_id_buffer
 	ldur	x11, [x8, #81]
 	ldur	x8, [x8, #65]
-.Ltmp356:
+.Ltmp357:
 	stur	x10, [x0, #23]
 	stp	x9, x11, [x0, #8]
 	str	x8, [x0]
@@ -2020,12 +2021,12 @@ pvi_wf_get_version:
 	.loc	3 491 1
 	ret
 .LBB3_2:
-.Ltmp357:
+.Ltmp358:
 	.loc	3 0 1 is_stmt 0
 	mov	x0, xzr
 	.loc	3 491 1
 	ret
-.Ltmp358:
+.Ltmp359:
 .Lfunc_end3:
 	.size	pvi_wf_get_version, .Lfunc_end3-pvi_wf_get_version
 	.cfi_endproc
@@ -2766,15 +2767,15 @@ need_pic:
 	.byte	48
 	.byte	159
 	.xword	.Ltmp175-.Lfunc_begin0
-	.xword	.Ltmp200-.Lfunc_begin0
+	.xword	.Ltmp201-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
-	.xword	.Ltmp200-.Lfunc_begin0
-	.xword	.Ltmp202-.Lfunc_begin0
+	.xword	.Ltmp201-.Lfunc_begin0
+	.xword	.Ltmp203-.Lfunc_begin0
 	.hword	1
 	.byte	91
-	.xword	.Ltmp203-.Lfunc_begin0
+	.xword	.Ltmp204-.Lfunc_begin0
 	.xword	.Lfunc_end0-.Lfunc_begin0
 	.hword	1
 	.byte	91
@@ -2788,7 +2789,7 @@ need_pic:
 	.byte	0
 	.byte	159
 	.xword	.Ltmp175-.Lfunc_begin0
-	.xword	.Ltmp200-.Lfunc_begin0
+	.xword	.Ltmp201-.Lfunc_begin0
 	.hword	3
 	.byte	17
 	.byte	0
@@ -2922,43 +2923,43 @@ need_pic:
 	.xword	0
 .Ldebug_loc44:
 	.xword	.Lfunc_begin1-.Lfunc_begin0
-	.xword	.Ltmp222-.Lfunc_begin0
+	.xword	.Ltmp223-.Lfunc_begin0
 	.hword	1
 	.byte	80
-	.xword	.Ltmp222-.Lfunc_begin0
-	.xword	.Ltmp328-.Lfunc_begin0
-	.hword	4
-	.byte	243
-	.byte	1
-	.byte	80
-	.byte	159
-	.xword	.Ltmp328-.Lfunc_begin0
+	.xword	.Ltmp223-.Lfunc_begin0
 	.xword	.Ltmp329-.Lfunc_begin0
-	.hword	1
+	.hword	4
+	.byte	243
+	.byte	1
 	.byte	80
+	.byte	159
 	.xword	.Ltmp329-.Lfunc_begin0
-	.xword	.Ltmp331-.Lfunc_begin0
+	.xword	.Ltmp330-.Lfunc_begin0
+	.hword	1
+	.byte	80
+	.xword	.Ltmp330-.Lfunc_begin0
+	.xword	.Ltmp332-.Lfunc_begin0
 	.hword	4
 	.byte	243
 	.byte	1
 	.byte	80
 	.byte	159
-	.xword	.Ltmp331-.Lfunc_begin0
 	.xword	.Ltmp332-.Lfunc_begin0
+	.xword	.Ltmp333-.Lfunc_begin0
 	.hword	1
 	.byte	80
-	.xword	.Ltmp332-.Lfunc_begin0
-	.xword	.Ltmp336-.Lfunc_begin0
+	.xword	.Ltmp333-.Lfunc_begin0
+	.xword	.Ltmp337-.Lfunc_begin0
 	.hword	4
 	.byte	243
 	.byte	1
 	.byte	80
 	.byte	159
-	.xword	.Ltmp336-.Lfunc_begin0
 	.xword	.Ltmp337-.Lfunc_begin0
+	.xword	.Ltmp338-.Lfunc_begin0
 	.hword	1
 	.byte	80
-	.xword	.Ltmp337-.Lfunc_begin0
+	.xword	.Ltmp338-.Lfunc_begin0
 	.xword	.Lfunc_end1-.Lfunc_begin0
 	.hword	4
 	.byte	243
@@ -2969,51 +2970,51 @@ need_pic:
 	.xword	0
 .Ldebug_loc45:
 	.xword	.Lfunc_begin1-.Lfunc_begin0
-	.xword	.Ltmp228-.Lfunc_begin0
+	.xword	.Ltmp229-.Lfunc_begin0
 	.hword	1
 	.byte	81
-	.xword	.Ltmp237-.Lfunc_begin0
-	.xword	.Ltmp244-.Lfunc_begin0
+	.xword	.Ltmp238-.Lfunc_begin0
+	.xword	.Ltmp245-.Lfunc_begin0
 	.hword	4
 	.byte	243
 	.byte	1
 	.byte	81
 	.byte	159
-	.xword	.Ltmp253-.Lfunc_begin0
-	.xword	.Ltmp261-.Lfunc_begin0
+	.xword	.Ltmp254-.Lfunc_begin0
+	.xword	.Ltmp262-.Lfunc_begin0
 	.hword	4
 	.byte	243
 	.byte	1
 	.byte	81
 	.byte	159
-	.xword	.Ltmp328-.Lfunc_begin0
-	.xword	.Ltmp330-.Lfunc_begin0
-	.hword	1
-	.byte	81
-	.xword	.Ltmp330-.Lfunc_begin0
+	.xword	.Ltmp329-.Lfunc_begin0
 	.xword	.Ltmp331-.Lfunc_begin0
-	.hword	4
-	.byte	243
-	.byte	1
+	.hword	1
 	.byte	81
-	.byte	159
 	.xword	.Ltmp331-.Lfunc_begin0
-	.xword	.Ltmp333-.Lfunc_begin0
-	.hword	1
-	.byte	81
-	.xword	.Ltmp333-.Lfunc_begin0
-	.xword	.Ltmp336-.Lfunc_begin0
+	.xword	.Ltmp332-.Lfunc_begin0
 	.hword	4
 	.byte	243
 	.byte	1
 	.byte	81
 	.byte	159
-	.xword	.Ltmp336-.Lfunc_begin0
-	.xword	.Ltmp338-.Lfunc_begin0
+	.xword	.Ltmp332-.Lfunc_begin0
+	.xword	.Ltmp334-.Lfunc_begin0
 	.hword	1
 	.byte	81
-	.xword	.Ltmp338-.Lfunc_begin0
+	.xword	.Ltmp334-.Lfunc_begin0
+	.xword	.Ltmp337-.Lfunc_begin0
+	.hword	4
+	.byte	243
+	.byte	1
+	.byte	81
+	.byte	159
+	.xword	.Ltmp337-.Lfunc_begin0
 	.xword	.Ltmp339-.Lfunc_begin0
+	.hword	1
+	.byte	81
+	.xword	.Ltmp339-.Lfunc_begin0
+	.xword	.Ltmp340-.Lfunc_begin0
 	.hword	4
 	.byte	243
 	.byte	1
@@ -3022,173 +3023,173 @@ need_pic:
 	.xword	0
 	.xword	0
 .Ldebug_loc46:
-	.xword	.Ltmp206-.Lfunc_begin0
 	.xword	.Ltmp207-.Lfunc_begin0
+	.xword	.Ltmp208-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
-	.xword	.Ltmp207-.Lfunc_begin0
-	.xword	.Ltmp225-.Lfunc_begin0
+	.xword	.Ltmp208-.Lfunc_begin0
+	.xword	.Ltmp226-.Lfunc_begin0
 	.hword	1
 	.byte	94
-	.xword	.Ltmp328-.Lfunc_begin0
-	.xword	.Ltmp335-.Lfunc_begin0
-	.hword	1
-	.byte	94
+	.xword	.Ltmp329-.Lfunc_begin0
 	.xword	.Ltmp336-.Lfunc_begin0
-	.xword	.Ltmp338-.Lfunc_begin0
+	.hword	1
+	.byte	94
+	.xword	.Ltmp337-.Lfunc_begin0
+	.xword	.Ltmp339-.Lfunc_begin0
 	.hword	1
 	.byte	94
 	.xword	0
 	.xword	0
 .Ldebug_loc47:
-	.xword	.Ltmp207-.Lfunc_begin0
 	.xword	.Ltmp208-.Lfunc_begin0
+	.xword	.Ltmp209-.Lfunc_begin0
 	.hword	3
 	.byte	17
 	.byte	0
 	.byte	159
-	.xword	.Ltmp208-.Lfunc_begin0
 	.xword	.Ltmp209-.Lfunc_begin0
+	.xword	.Ltmp210-.Lfunc_begin0
 	.hword	1
 	.byte	88
-	.xword	.Ltmp214-.Lfunc_begin0
 	.xword	.Ltmp215-.Lfunc_begin0
+	.xword	.Ltmp216-.Lfunc_begin0
 	.hword	1
 	.byte	88
-	.xword	.Ltmp224-.Lfunc_begin0
-	.xword	.Ltmp226-.Lfunc_begin0
+	.xword	.Ltmp225-.Lfunc_begin0
+	.xword	.Ltmp227-.Lfunc_begin0
 	.hword	1
 	.byte	95
 	.xword	0
 	.xword	0
 .Ldebug_loc48:
-	.xword	.Ltmp207-.Lfunc_begin0
-	.xword	.Ltmp210-.Lfunc_begin0
+	.xword	.Ltmp208-.Lfunc_begin0
+	.xword	.Ltmp211-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
-	.xword	.Ltmp210-.Lfunc_begin0
-	.xword	.Ltmp213-.Lfunc_begin0
+	.xword	.Ltmp211-.Lfunc_begin0
+	.xword	.Ltmp214-.Lfunc_begin0
 	.hword	1
 	.byte	88
-	.xword	.Ltmp216-.Lfunc_begin0
-	.xword	.Ltmp218-.Lfunc_begin0
+	.xword	.Ltmp217-.Lfunc_begin0
+	.xword	.Ltmp219-.Lfunc_begin0
 	.hword	1
 	.byte	89
-	.xword	.Ltmp225-.Lfunc_begin0
-	.xword	.Ltmp281-.Lfunc_begin0
+	.xword	.Ltmp226-.Lfunc_begin0
+	.xword	.Ltmp282-.Lfunc_begin0
 	.hword	1
 	.byte	94
-	.xword	.Ltmp328-.Lfunc_begin0
-	.xword	.Ltmp331-.Lfunc_begin0
+	.xword	.Ltmp329-.Lfunc_begin0
+	.xword	.Ltmp332-.Lfunc_begin0
 	.hword	1
 	.byte	88
-	.xword	.Ltmp331-.Lfunc_begin0
-	.xword	.Ltmp334-.Lfunc_begin0
+	.xword	.Ltmp332-.Lfunc_begin0
+	.xword	.Ltmp335-.Lfunc_begin0
 	.hword	1
 	.byte	89
 	.xword	0
 	.xword	0
 .Ldebug_loc49:
-	.xword	.Ltmp229-.Lfunc_begin0
-	.xword	.Ltmp281-.Lfunc_begin0
+	.xword	.Ltmp230-.Lfunc_begin0
+	.xword	.Ltmp282-.Lfunc_begin0
 	.hword	1
 	.byte	94
 	.xword	0
 	.xword	0
 .Ldebug_loc50:
-	.xword	.Ltmp218-.Lfunc_begin0
-	.xword	.Ltmp228-.Lfunc_begin0
+	.xword	.Ltmp219-.Lfunc_begin0
+	.xword	.Ltmp229-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
-	.xword	.Ltmp230-.Lfunc_begin0
-	.xword	.Ltmp236-.Lfunc_begin0
+	.xword	.Ltmp231-.Lfunc_begin0
+	.xword	.Ltmp237-.Lfunc_begin0
 	.hword	1
 	.byte	93
-	.xword	.Ltmp236-.Lfunc_begin0
-	.xword	.Ltmp238-.Lfunc_begin0
+	.xword	.Ltmp237-.Lfunc_begin0
+	.xword	.Ltmp239-.Lfunc_begin0
 	.hword	1
 	.byte	80
-	.xword	.Ltmp239-.Lfunc_begin0
-	.xword	.Ltmp240-.Lfunc_begin0
-	.hword	1
-	.byte	82
 	.xword	.Ltmp240-.Lfunc_begin0
 	.xword	.Ltmp241-.Lfunc_begin0
 	.hword	1
-	.byte	80
+	.byte	82
+	.xword	.Ltmp241-.Lfunc_begin0
 	.xword	.Ltmp242-.Lfunc_begin0
+	.hword	1
+	.byte	80
 	.xword	.Ltmp243-.Lfunc_begin0
+	.xword	.Ltmp244-.Lfunc_begin0
 	.hword	1
 	.byte	93
-	.xword	.Ltmp243-.Lfunc_begin0
-	.xword	.Ltmp248-.Lfunc_begin0
+	.xword	.Ltmp244-.Lfunc_begin0
+	.xword	.Ltmp249-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
-	.xword	.Ltmp248-.Lfunc_begin0
-	.xword	.Ltmp252-.Lfunc_begin0
+	.xword	.Ltmp249-.Lfunc_begin0
+	.xword	.Ltmp253-.Lfunc_begin0
 	.hword	1
 	.byte	93
-	.xword	.Ltmp252-.Lfunc_begin0
-	.xword	.Ltmp254-.Lfunc_begin0
+	.xword	.Ltmp253-.Lfunc_begin0
+	.xword	.Ltmp255-.Lfunc_begin0
 	.hword	1
 	.byte	80
-	.xword	.Ltmp255-.Lfunc_begin0
-	.xword	.Ltmp256-.Lfunc_begin0
-	.hword	1
-	.byte	82
 	.xword	.Ltmp256-.Lfunc_begin0
 	.xword	.Ltmp257-.Lfunc_begin0
 	.hword	1
+	.byte	82
+	.xword	.Ltmp257-.Lfunc_begin0
+	.xword	.Ltmp258-.Lfunc_begin0
+	.hword	1
 	.byte	85
-	.xword	.Ltmp259-.Lfunc_begin0
-	.xword	.Ltmp261-.Lfunc_begin0
+	.xword	.Ltmp260-.Lfunc_begin0
+	.xword	.Ltmp262-.Lfunc_begin0
 	.hword	1
 	.byte	93
-	.xword	.Ltmp261-.Lfunc_begin0
-	.xword	.Ltmp264-.Lfunc_begin0
+	.xword	.Ltmp262-.Lfunc_begin0
+	.xword	.Ltmp265-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
-	.xword	.Ltmp265-.Lfunc_begin0
-	.xword	.Ltmp271-.Lfunc_begin0
-	.hword	1
-	.byte	93
-	.xword	.Ltmp271-.Lfunc_begin0
+	.xword	.Ltmp266-.Lfunc_begin0
 	.xword	.Ltmp272-.Lfunc_begin0
 	.hword	1
-	.byte	85
+	.byte	93
 	.xword	.Ltmp272-.Lfunc_begin0
 	.xword	.Ltmp273-.Lfunc_begin0
 	.hword	1
-	.byte	103
+	.byte	85
 	.xword	.Ltmp273-.Lfunc_begin0
 	.xword	.Ltmp274-.Lfunc_begin0
 	.hword	1
-	.byte	104
+	.byte	103
+	.xword	.Ltmp274-.Lfunc_begin0
 	.xword	.Ltmp275-.Lfunc_begin0
+	.hword	1
+	.byte	104
 	.xword	.Ltmp276-.Lfunc_begin0
+	.xword	.Ltmp277-.Lfunc_begin0
 	.hword	1
 	.byte	93
-	.xword	.Ltmp276-.Lfunc_begin0
-	.xword	.Ltmp280-.Lfunc_begin0
-	.hword	2
-	.byte	48
-	.byte	159
-	.xword	.Ltmp280-.Lfunc_begin0
+	.xword	.Ltmp277-.Lfunc_begin0
 	.xword	.Ltmp281-.Lfunc_begin0
-	.hword	1
-	.byte	93
-	.xword	.Ltmp287-.Lfunc_begin0
-	.xword	.Ltmp288-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
+	.xword	.Ltmp281-.Lfunc_begin0
+	.xword	.Ltmp282-.Lfunc_begin0
+	.hword	1
+	.byte	93
 	.xword	.Ltmp288-.Lfunc_begin0
-	.xword	.Ltmp323-.Lfunc_begin0
+	.xword	.Ltmp289-.Lfunc_begin0
+	.hword	2
+	.byte	48
+	.byte	159
+	.xword	.Ltmp289-.Lfunc_begin0
+	.xword	.Ltmp324-.Lfunc_begin0
 	.hword	10
 	.byte	120
 	.byte	0
@@ -3200,8 +3201,8 @@ need_pic:
 	.byte	2
 	.byte	30
 	.byte	159
-	.xword	.Ltmp323-.Lfunc_begin0
-	.xword	.Ltmp327-.Lfunc_begin0
+	.xword	.Ltmp324-.Lfunc_begin0
+	.xword	.Ltmp328-.Lfunc_begin0
 	.hword	13
 	.byte	120
 	.byte	0
@@ -3216,253 +3217,253 @@ need_pic:
 	.byte	2
 	.byte	34
 	.byte	159
-	.xword	.Ltmp336-.Lfunc_begin0
-	.xword	.Ltmp338-.Lfunc_begin0
+	.xword	.Ltmp337-.Lfunc_begin0
+	.xword	.Ltmp339-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
 	.xword	0
 	.xword	0
 .Ldebug_loc51:
-	.xword	.Ltmp218-.Lfunc_begin0
-	.xword	.Ltmp228-.Lfunc_begin0
+	.xword	.Ltmp219-.Lfunc_begin0
+	.xword	.Ltmp229-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
-	.xword	.Ltmp230-.Lfunc_begin0
-	.xword	.Ltmp245-.Lfunc_begin0
+	.xword	.Ltmp231-.Lfunc_begin0
+	.xword	.Ltmp246-.Lfunc_begin0
 	.hword	1
 	.byte	92
-	.xword	.Ltmp245-.Lfunc_begin0
-	.xword	.Ltmp248-.Lfunc_begin0
+	.xword	.Ltmp246-.Lfunc_begin0
+	.xword	.Ltmp249-.Lfunc_begin0
 	.hword	1
 	.byte	81
-	.xword	.Ltmp248-.Lfunc_begin0
-	.xword	.Ltmp262-.Lfunc_begin0
+	.xword	.Ltmp249-.Lfunc_begin0
+	.xword	.Ltmp263-.Lfunc_begin0
 	.hword	1
 	.byte	92
-	.xword	.Ltmp262-.Lfunc_begin0
-	.xword	.Ltmp264-.Lfunc_begin0
+	.xword	.Ltmp263-.Lfunc_begin0
+	.xword	.Ltmp265-.Lfunc_begin0
 	.hword	1
 	.byte	84
-	.xword	.Ltmp265-.Lfunc_begin0
-	.xword	.Ltmp277-.Lfunc_begin0
+	.xword	.Ltmp266-.Lfunc_begin0
+	.xword	.Ltmp278-.Lfunc_begin0
 	.hword	1
 	.byte	92
-	.xword	.Ltmp277-.Lfunc_begin0
-	.xword	.Ltmp280-.Lfunc_begin0
-	.hword	1
-	.byte	85
-	.xword	.Ltmp280-.Lfunc_begin0
+	.xword	.Ltmp278-.Lfunc_begin0
 	.xword	.Ltmp281-.Lfunc_begin0
 	.hword	1
+	.byte	85
+	.xword	.Ltmp281-.Lfunc_begin0
+	.xword	.Ltmp282-.Lfunc_begin0
+	.hword	1
 	.byte	92
-	.xword	.Ltmp288-.Lfunc_begin0
-	.xword	.Ltmp292-.Lfunc_begin0
+	.xword	.Ltmp289-.Lfunc_begin0
+	.xword	.Ltmp293-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
-	.xword	.Ltmp292-.Lfunc_begin0
-	.xword	.Ltmp294-.Lfunc_begin0
+	.xword	.Ltmp293-.Lfunc_begin0
+	.xword	.Ltmp295-.Lfunc_begin0
 	.hword	2
 	.byte	50
 	.byte	159
-	.xword	.Ltmp294-.Lfunc_begin0
-	.xword	.Ltmp296-.Lfunc_begin0
+	.xword	.Ltmp295-.Lfunc_begin0
+	.xword	.Ltmp297-.Lfunc_begin0
 	.hword	2
 	.byte	52
 	.byte	159
-	.xword	.Ltmp296-.Lfunc_begin0
-	.xword	.Ltmp298-.Lfunc_begin0
+	.xword	.Ltmp297-.Lfunc_begin0
+	.xword	.Ltmp299-.Lfunc_begin0
 	.hword	2
 	.byte	54
 	.byte	159
-	.xword	.Ltmp298-.Lfunc_begin0
-	.xword	.Ltmp300-.Lfunc_begin0
+	.xword	.Ltmp299-.Lfunc_begin0
+	.xword	.Ltmp301-.Lfunc_begin0
 	.hword	2
 	.byte	56
 	.byte	159
-	.xword	.Ltmp300-.Lfunc_begin0
-	.xword	.Ltmp302-.Lfunc_begin0
+	.xword	.Ltmp301-.Lfunc_begin0
+	.xword	.Ltmp303-.Lfunc_begin0
 	.hword	2
 	.byte	58
 	.byte	159
-	.xword	.Ltmp302-.Lfunc_begin0
-	.xword	.Ltmp304-.Lfunc_begin0
+	.xword	.Ltmp303-.Lfunc_begin0
+	.xword	.Ltmp305-.Lfunc_begin0
 	.hword	2
 	.byte	60
 	.byte	159
-	.xword	.Ltmp304-.Lfunc_begin0
-	.xword	.Ltmp306-.Lfunc_begin0
+	.xword	.Ltmp305-.Lfunc_begin0
+	.xword	.Ltmp307-.Lfunc_begin0
 	.hword	2
 	.byte	62
 	.byte	159
-	.xword	.Ltmp306-.Lfunc_begin0
-	.xword	.Ltmp308-.Lfunc_begin0
+	.xword	.Ltmp307-.Lfunc_begin0
+	.xword	.Ltmp309-.Lfunc_begin0
 	.hword	2
 	.byte	64
 	.byte	159
-	.xword	.Ltmp308-.Lfunc_begin0
-	.xword	.Ltmp310-.Lfunc_begin0
+	.xword	.Ltmp309-.Lfunc_begin0
+	.xword	.Ltmp311-.Lfunc_begin0
 	.hword	2
 	.byte	66
 	.byte	159
-	.xword	.Ltmp310-.Lfunc_begin0
-	.xword	.Ltmp312-.Lfunc_begin0
+	.xword	.Ltmp311-.Lfunc_begin0
+	.xword	.Ltmp313-.Lfunc_begin0
 	.hword	2
 	.byte	68
 	.byte	159
-	.xword	.Ltmp312-.Lfunc_begin0
-	.xword	.Ltmp314-.Lfunc_begin0
+	.xword	.Ltmp313-.Lfunc_begin0
+	.xword	.Ltmp315-.Lfunc_begin0
 	.hword	2
 	.byte	70
 	.byte	159
-	.xword	.Ltmp314-.Lfunc_begin0
-	.xword	.Ltmp316-.Lfunc_begin0
+	.xword	.Ltmp315-.Lfunc_begin0
+	.xword	.Ltmp317-.Lfunc_begin0
 	.hword	2
 	.byte	72
 	.byte	159
-	.xword	.Ltmp316-.Lfunc_begin0
-	.xword	.Ltmp318-.Lfunc_begin0
+	.xword	.Ltmp317-.Lfunc_begin0
+	.xword	.Ltmp319-.Lfunc_begin0
 	.hword	2
 	.byte	74
 	.byte	159
-	.xword	.Ltmp318-.Lfunc_begin0
-	.xword	.Ltmp320-.Lfunc_begin0
+	.xword	.Ltmp319-.Lfunc_begin0
+	.xword	.Ltmp321-.Lfunc_begin0
 	.hword	2
 	.byte	76
 	.byte	159
-	.xword	.Ltmp320-.Lfunc_begin0
-	.xword	.Ltmp323-.Lfunc_begin0
+	.xword	.Ltmp321-.Lfunc_begin0
+	.xword	.Ltmp324-.Lfunc_begin0
 	.hword	2
 	.byte	78
 	.byte	159
-	.xword	.Ltmp323-.Lfunc_begin0
-	.xword	.Ltmp328-.Lfunc_begin0
+	.xword	.Ltmp324-.Lfunc_begin0
+	.xword	.Ltmp329-.Lfunc_begin0
 	.hword	3
 	.byte	16
 	.byte	32
 	.byte	159
-	.xword	.Ltmp336-.Lfunc_begin0
-	.xword	.Ltmp338-.Lfunc_begin0
+	.xword	.Ltmp337-.Lfunc_begin0
+	.xword	.Ltmp339-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
 	.xword	0
 	.xword	0
 .Ldebug_loc52:
-	.xword	.Ltmp218-.Lfunc_begin0
-	.xword	.Ltmp228-.Lfunc_begin0
+	.xword	.Ltmp219-.Lfunc_begin0
+	.xword	.Ltmp229-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
-	.xword	.Ltmp230-.Lfunc_begin0
-	.xword	.Ltmp247-.Lfunc_begin0
-	.hword	1
-	.byte	99
+	.xword	.Ltmp231-.Lfunc_begin0
 	.xword	.Ltmp248-.Lfunc_begin0
-	.xword	.Ltmp264-.Lfunc_begin0
 	.hword	1
 	.byte	99
+	.xword	.Ltmp249-.Lfunc_begin0
 	.xword	.Ltmp265-.Lfunc_begin0
-	.xword	.Ltmp279-.Lfunc_begin0
 	.hword	1
 	.byte	99
+	.xword	.Ltmp266-.Lfunc_begin0
 	.xword	.Ltmp280-.Lfunc_begin0
-	.xword	.Ltmp328-.Lfunc_begin0
 	.hword	1
 	.byte	99
-	.xword	.Ltmp336-.Lfunc_begin0
-	.xword	.Ltmp338-.Lfunc_begin0
+	.xword	.Ltmp281-.Lfunc_begin0
+	.xword	.Ltmp329-.Lfunc_begin0
+	.hword	1
+	.byte	99
+	.xword	.Ltmp337-.Lfunc_begin0
+	.xword	.Ltmp339-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
 	.xword	0
 	.xword	0
 .Ldebug_loc53:
-	.xword	.Ltmp218-.Lfunc_begin0
-	.xword	.Ltmp228-.Lfunc_begin0
+	.xword	.Ltmp219-.Lfunc_begin0
+	.xword	.Ltmp229-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
-	.xword	.Ltmp230-.Lfunc_begin0
-	.xword	.Ltmp243-.Lfunc_begin0
+	.xword	.Ltmp231-.Lfunc_begin0
+	.xword	.Ltmp244-.Lfunc_begin0
 	.hword	1
 	.byte	91
-	.xword	.Ltmp248-.Lfunc_begin0
-	.xword	.Ltmp260-.Lfunc_begin0
+	.xword	.Ltmp249-.Lfunc_begin0
+	.xword	.Ltmp261-.Lfunc_begin0
 	.hword	1
 	.byte	91
-	.xword	.Ltmp265-.Lfunc_begin0
-	.xword	.Ltmp281-.Lfunc_begin0
+	.xword	.Ltmp266-.Lfunc_begin0
+	.xword	.Ltmp282-.Lfunc_begin0
 	.hword	1
 	.byte	91
-	.xword	.Ltmp336-.Lfunc_begin0
-	.xword	.Ltmp338-.Lfunc_begin0
+	.xword	.Ltmp337-.Lfunc_begin0
+	.xword	.Ltmp339-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
 	.xword	0
 	.xword	0
 .Ldebug_loc54:
-	.xword	.Ltmp218-.Lfunc_begin0
-	.xword	.Ltmp228-.Lfunc_begin0
+	.xword	.Ltmp219-.Lfunc_begin0
+	.xword	.Ltmp229-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
-	.xword	.Ltmp235-.Lfunc_begin0
-	.xword	.Ltmp248-.Lfunc_begin0
+	.xword	.Ltmp236-.Lfunc_begin0
+	.xword	.Ltmp249-.Lfunc_begin0
 	.hword	1
 	.byte	83
-	.xword	.Ltmp251-.Lfunc_begin0
-	.xword	.Ltmp258-.Lfunc_begin0
+	.xword	.Ltmp252-.Lfunc_begin0
+	.xword	.Ltmp259-.Lfunc_begin0
 	.hword	1
 	.byte	83
-	.xword	.Ltmp289-.Lfunc_begin0
-	.xword	.Ltmp328-.Lfunc_begin0
+	.xword	.Ltmp290-.Lfunc_begin0
+	.xword	.Ltmp329-.Lfunc_begin0
 	.hword	1
 	.byte	95
-	.xword	.Ltmp336-.Lfunc_begin0
-	.xword	.Ltmp338-.Lfunc_begin0
+	.xword	.Ltmp337-.Lfunc_begin0
+	.xword	.Ltmp339-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
 	.xword	0
 	.xword	0
 .Ldebug_loc55:
-	.xword	.Ltmp218-.Lfunc_begin0
-	.xword	.Ltmp228-.Lfunc_begin0
+	.xword	.Ltmp219-.Lfunc_begin0
+	.xword	.Ltmp229-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
-	.xword	.Ltmp267-.Lfunc_begin0
-	.xword	.Ltmp280-.Lfunc_begin0
+	.xword	.Ltmp268-.Lfunc_begin0
+	.xword	.Ltmp281-.Lfunc_begin0
 	.hword	1
 	.byte	84
-	.xword	.Ltmp284-.Lfunc_begin0
-	.xword	.Ltmp286-.Lfunc_begin0
+	.xword	.Ltmp285-.Lfunc_begin0
+	.xword	.Ltmp287-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
-	.xword	.Ltmp286-.Lfunc_begin0
-	.xword	.Ltmp328-.Lfunc_begin0
+	.xword	.Ltmp287-.Lfunc_begin0
+	.xword	.Ltmp329-.Lfunc_begin0
 	.hword	1
 	.byte	89
-	.xword	.Ltmp336-.Lfunc_begin0
-	.xword	.Ltmp338-.Lfunc_begin0
+	.xword	.Ltmp337-.Lfunc_begin0
+	.xword	.Ltmp339-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
 	.xword	0
 	.xword	0
 .Ldebug_loc56:
-	.xword	.Ltmp218-.Lfunc_begin0
-	.xword	.Ltmp227-.Lfunc_begin0
+	.xword	.Ltmp219-.Lfunc_begin0
+	.xword	.Ltmp228-.Lfunc_begin0
 	.hword	2
 	.byte	49
 	.byte	159
-	.xword	.Ltmp248-.Lfunc_begin0
 	.xword	.Ltmp249-.Lfunc_begin0
+	.xword	.Ltmp250-.Lfunc_begin0
 	.hword	9
 	.byte	112
 	.byte	0
@@ -3473,30 +3474,30 @@ need_pic:
 	.byte	1
 	.byte	26
 	.byte	159
-	.xword	.Ltmp336-.Lfunc_begin0
-	.xword	.Ltmp338-.Lfunc_begin0
+	.xword	.Ltmp337-.Lfunc_begin0
+	.xword	.Ltmp339-.Lfunc_begin0
 	.hword	2
 	.byte	49
 	.byte	159
 	.xword	0
 	.xword	0
 .Ldebug_loc57:
-	.xword	.Ltmp218-.Lfunc_begin0
-	.xword	.Ltmp227-.Lfunc_begin0
+	.xword	.Ltmp219-.Lfunc_begin0
+	.xword	.Ltmp228-.Lfunc_begin0
 	.hword	3
 	.byte	17
 	.byte	0
 	.byte	159
-	.xword	.Ltmp227-.Lfunc_begin0
 	.xword	.Ltmp228-.Lfunc_begin0
-	.hword	1
-	.byte	95
 	.xword	.Ltmp229-.Lfunc_begin0
-	.xword	.Ltmp281-.Lfunc_begin0
 	.hword	1
 	.byte	95
-	.xword	.Ltmp336-.Lfunc_begin0
-	.xword	.Ltmp338-.Lfunc_begin0
+	.xword	.Ltmp230-.Lfunc_begin0
+	.xword	.Ltmp282-.Lfunc_begin0
+	.hword	1
+	.byte	95
+	.xword	.Ltmp337-.Lfunc_begin0
+	.xword	.Ltmp339-.Lfunc_begin0
 	.hword	3
 	.byte	17
 	.byte	0
@@ -3505,25 +3506,25 @@ need_pic:
 	.xword	0
 .Ldebug_loc58:
 	.xword	.Lfunc_begin2-.Lfunc_begin0
-	.xword	.Ltmp344-.Lfunc_begin0
-	.hword	1
-	.byte	80
 	.xword	.Ltmp345-.Lfunc_begin0
-	.xword	.Ltmp346-.Lfunc_begin0
 	.hword	1
 	.byte	80
 	.xword	.Ltmp346-.Lfunc_begin0
+	.xword	.Ltmp347-.Lfunc_begin0
+	.hword	1
+	.byte	80
+	.xword	.Ltmp347-.Lfunc_begin0
 	.xword	.Lfunc_end2-.Lfunc_begin0
 	.hword	1
 	.byte	99
 	.xword	0
 	.xword	0
 .Ldebug_loc59:
-	.xword	.Ltmp341-.Lfunc_begin0
 	.xword	.Ltmp342-.Lfunc_begin0
+	.xword	.Ltmp343-.Lfunc_begin0
 	.hword	1
 	.byte	80
-	.xword	.Ltmp342-.Lfunc_begin0
+	.xword	.Ltmp343-.Lfunc_begin0
 	.xword	.Lfunc_end2-.Lfunc_begin0
 	.hword	2
 	.byte	48
@@ -3532,15 +3533,15 @@ need_pic:
 	.xword	0
 .Ldebug_loc60:
 	.xword	.Lfunc_begin3-.Lfunc_begin0
-	.xword	.Ltmp354-.Lfunc_begin0
+	.xword	.Ltmp355-.Lfunc_begin0
 	.hword	2
 	.byte	48
 	.byte	159
-	.xword	.Ltmp354-.Lfunc_begin0
-	.xword	.Ltmp356-.Lfunc_begin0
+	.xword	.Ltmp355-.Lfunc_begin0
+	.xword	.Ltmp357-.Lfunc_begin0
 	.hword	1
 	.byte	88
-	.xword	.Ltmp357-.Lfunc_begin0
+	.xword	.Ltmp358-.Lfunc_begin0
 	.xword	.Lfunc_end3-.Lfunc_begin0
 	.hword	1
 	.byte	88
@@ -5199,7 +5200,7 @@ need_pic:
 	.xword	.Ltmp91-.Lfunc_begin0
 	.xword	.Ltmp93-.Lfunc_begin0
 	.xword	.Ltmp175-.Lfunc_begin0
-	.xword	.Ltmp205-.Lfunc_begin0
+	.xword	.Ltmp206-.Lfunc_begin0
 	.xword	0
 	.xword	0
 .Ldebug_ranges5:
@@ -5210,12 +5211,12 @@ need_pic:
 	.xword	0
 	.xword	0
 .Ldebug_ranges6:
-	.xword	.Ltmp218-.Lfunc_begin0
-	.xword	.Ltmp223-.Lfunc_begin0
-	.xword	.Ltmp229-.Lfunc_begin0
-	.xword	.Ltmp328-.Lfunc_begin0
-	.xword	.Ltmp336-.Lfunc_begin0
-	.xword	.Ltmp338-.Lfunc_begin0
+	.xword	.Ltmp219-.Lfunc_begin0
+	.xword	.Ltmp224-.Lfunc_begin0
+	.xword	.Ltmp230-.Lfunc_begin0
+	.xword	.Ltmp329-.Lfunc_begin0
+	.xword	.Ltmp337-.Lfunc_begin0
+	.xword	.Ltmp339-.Lfunc_begin0
 	.xword	0
 	.xword	0
 	.section	.debug_str,"MS",@progbits,1
