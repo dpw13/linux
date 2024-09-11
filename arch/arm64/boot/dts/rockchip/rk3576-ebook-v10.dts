@@ -502,7 +502,7 @@
 
 		regulators {
 			compatible = "fp9931-regulator";
-			fp9931_vcom: fp9931-vcom {
+			fp9931_vcom: vcom {
 				regulator-name = "vcom";
 				regulator-min-microvolt = <0>;
 				regulator-max-microvolt = <5000000>;
@@ -512,7 +512,7 @@
 				};
 			};
 
-			fp9931_vpos_vneg: fp9931-vpos-vneg {
+			fp9931_vpos_vneg: vpos_vneg {
 				regulator-name = "vpos_vneg";
 				regulator-init-microvolt = <15060000>;
 				regulator-boot-on;
