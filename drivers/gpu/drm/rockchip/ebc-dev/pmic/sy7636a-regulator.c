@@ -16,8 +16,11 @@
 #define SY7636A_MAX_ENABLE_GPIO_NUM 4
 
 struct sy7636a_data {
+	struct platform_device *pdev;
 	struct regmap *regmap;
 	struct gpio_descs *enable_gpio;
+	struct gpio_desc *pgood_gpio;
+	int pgood_irq;
 	/*
 	 * When registering a new regulator, regulator core will try to
 	 * call "set_suspend_disable" to check whether regulator device
@@ -27,6 +30,25 @@ struct sy7636a_data {
 	bool initial_suspend;
 	int vcom_uV;
 };
+
+static int sy7636a_power_enable(struct regulator_dev *rdev)
+{
+	struct sy7636a_data *data = rdev->reg_data;
+	int ret;
+
+	ret = regulator_enable_regmap(rdev);
+	enable_irq(data->pgood_irq);
+
+	return ret;
+}
+
+static int sy7636a_power_disable(struct regulator_dev *rdev)
+{
+	struct sy7636a_data *data = rdev->reg_data;
+
+	disable_irq(data->pgood_irq);
+	return regulator_disable_regmap(rdev);
+}
 
 static int sy7636a_get_vcom_voltage_op(struct regulator_dev *rdev)
 {
@@ -153,8 +175,8 @@ static int sy7636a_resume(struct regulator_dev *rdev)
 static const struct regulator_ops sy7636a_vcom_volt_ops = {
 	.set_voltage = sy7636a_set_vcom_voltage_op,
 	.get_voltage = sy7636a_get_vcom_voltage_op,
-	.enable = regulator_enable_regmap,
-	.disable = regulator_disable_regmap,
+	.enable = sy7636a_power_enable,
+	.disable = sy7636a_power_disable,
 	.is_enabled = regulator_is_enabled_regmap,
 	.get_status = sy7636a_get_status,
 	.set_suspend_disable = sy7636a_set_suspend_disable,
@@ -173,6 +195,28 @@ static const struct regulator_desc desc = {
 	.of_match = of_match_ptr("vcom"),
 };
 
+static irqreturn_t sy7636a_power_good_irq_handler(int irq, void *dev_id)
+{
+	struct sy7636a_data *data = dev_id;
+	struct regmap *regmap = data->regmap;
+	struct platform_device *pdev = data->pdev;
+	u32 val;
+	int ret;
+
+	ret = regmap_read(regmap, SY7636A_REG_FAULT_FLAG, &val);
+	if (ret) {
+		dev_err(pdev->dev.parent, "sy7636a failed to read fault flag\n");
+		goto out;
+	}
+
+	if (!(val & SY7636A_FAULT_FLAG_PG) || (val & SY7636A_FAULT_FLAG_FAULT))
+		dev_err(pdev->dev.parent, "sy7636a power fault flag:%d\n",
+			val >> SY7636A_FAULT_FLAG_FAULT_SHIFT);
+
+out:
+	return IRQ_HANDLED;
+}
+
 static int sy7636a_regulator_probe(struct platform_device *pdev)
 {
 	struct regmap *regmap = dev_get_regmap(pdev->dev.parent, NULL);
@@ -188,6 +232,7 @@ static int sy7636a_regulator_probe(struct platform_device *pdev)
 	if (!data)
 		return -ENOMEM;
 
+	data->pdev = pdev;
 	data->regmap = regmap;
 	data->initial_suspend = true;
 
@@ -197,6 +242,26 @@ static int sy7636a_regulator_probe(struct platform_device *pdev)
 		dev_err(pdev->dev.parent, "Failed to get sy7636a enable gpio %ld\n",
 			PTR_ERR(data->enable_gpio));
 		return PTR_ERR(data->enable_gpio);
+	}
+
+	data->pgood_irq = -1;
+	data->pgood_gpio = devm_gpiod_get(pdev->dev.parent, "pgood", GPIOD_IN);
+	if (IS_ERR(data->pgood_gpio)) {
+		dev_warn(pdev->dev.parent, "Failed to get sy7636a pgood gpio %ld\n",
+			 PTR_ERR(data->pgood_gpio));
+	} else {
+		data->pgood_irq = gpiod_to_irq(data->pgood_gpio);
+		if (data->pgood_irq < 0) {
+			dev_err(pdev->dev.parent, "Failed to get sy7636a power good int irq\n");
+		} else {
+			ret = devm_request_threaded_irq(pdev->dev.parent, data->pgood_irq, NULL,
+							sy7636a_power_good_irq_handler,
+							IRQF_TRIGGER_FALLING |
+							IRQF_ONESHOT |
+							IRQF_NO_AUTOEN, "sy7636a", data);
+			if (ret)
+				dev_err(pdev->dev.parent, "Failed to request sy7636a irq\n");
+		}
 	}
 
 	/* sy7636a needs 2.5ms to enter active mode after enable */
