@@ -52,6 +52,10 @@
 	};
 };
 
+&cma {
+	size = <0x1600000>;
+};
+
 &rgb {
 	status = "okay";
 	pinctrl-names = "default";
@@ -77,4 +81,8 @@
 
 &route_rgb {
 	status = "okay";
+};
+
+&u2phy_otg0 {
+	rockchip,vbus-always-on;
 };

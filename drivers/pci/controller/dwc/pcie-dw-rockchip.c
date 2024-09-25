@@ -143,6 +143,7 @@ struct rk_pcie {
 	raw_spinlock_t			intx_lock;
 	u16				aspm;
 	u32				l1ss_ctl1;
+	u32				l1ss_ctl2;
 	struct dentry			*debugfs;
 	u32				msi_vector_num;
 	struct workqueue_struct		*hot_rst_wq;
@@ -301,6 +302,34 @@ static int rk_pcie_disable_power(struct rk_pcie *rk_pcie)
 		dev_err(dev, "fail to disable vpcie3v3 regulator\n");
 
 	return ret;
+}
+
+static void rk_pcie_retrain(struct dw_pcie *pci)
+{
+	u32 pcie_cap_off;
+	u16 lnk_stat, lnk_ctl;
+	int ret;
+
+	/*
+	 * Set retrain bit if current speed is 2.5 GB/s,
+	 * but the PCIe root port support is > 2.5 GB/s.
+	 */
+	if (pci->link_gen < 2)
+		return;
+
+	dev_info(pci->dev, "Retrain link..\n");
+	pcie_cap_off = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+	lnk_stat = dw_pcie_readw_dbi(pci, pcie_cap_off + PCI_EXP_LNKSTA);
+	if ((lnk_stat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB) {
+		lnk_ctl = dw_pcie_readw_dbi(pci, pcie_cap_off + PCI_EXP_LNKCTL);
+		lnk_ctl |= PCI_EXP_LNKCTL_RL;
+		dw_pcie_writew_dbi(pci, pcie_cap_off + PCI_EXP_LNKCTL, lnk_ctl);
+
+		ret = readw_poll_timeout(pci->dbi_base + pcie_cap_off + PCI_EXP_LNKSTA,
+			 lnk_stat, ((lnk_stat & PCI_EXP_LNKSTA_LT) == 0), 1000, HZ);
+		if (ret)
+			dev_err(pci->dev, "Retrain link timeout\n");
+	}
 }
 
 static int rk_pcie_establish_link(struct dw_pcie *pci)
@@ -1312,6 +1341,8 @@ static int rk_pcie_really_probe(void *p)
 	if (ret)
 		goto release_driver;
 
+	reset_control_assert(rk_pcie->rsts);
+	udelay(10);
 	reset_control_deassert(rk_pcie->rsts);
 
 	ret = clk_bulk_prepare_enable(rk_pcie->clk_cnt, rk_pcie->clks);
@@ -1434,45 +1465,68 @@ static void rk_pcie_downstream_dev_to_d0(struct rk_pcie *rk_pcie, bool enable)
 	}
 
 	/* Save and restore root bus ASPM */
-	if (enable) {
-		if (rk_pcie->l1ss_ctl1)
-			dw_pcie_writel_dbi(rk_pcie->pci, bridge->l1ss + PCI_L1SS_CTL1, rk_pcie->l1ss_ctl1);
-
-		/* rk_pcie->aspm woule be saved in advance when enable is false */
-		dw_pcie_writel_dbi(rk_pcie->pci, bridge->pcie_cap + PCI_EXP_LNKCTL, rk_pcie->aspm);
-	} else {
+	if (!enable) {
 		val = dw_pcie_readl_dbi(rk_pcie->pci, bridge->l1ss + PCI_L1SS_CTL1);
-		if (val & PCI_L1SS_CTL1_L1SS_MASK)
+		if (val & PCI_L1SS_CTL1_L1SS_MASK) {
 			rk_pcie->l1ss_ctl1 = val;
-		else
+			rk_pcie->l1ss_ctl2 = dw_pcie_readl_dbi(rk_pcie->pci,
+							       bridge->l1ss + PCI_L1SS_CTL2);
+		} else {
 			rk_pcie->l1ss_ctl1 = 0;
+			rk_pcie->l1ss_ctl2 = 0;
+		}
 
 		val = dw_pcie_readl_dbi(rk_pcie->pci, bridge->pcie_cap + PCI_EXP_LNKCTL);
 		rk_pcie->aspm = val & PCI_EXP_LNKCTL_ASPMC;
-		val &= ~(PCI_EXP_LNKCAP_ASPM_L1 | PCI_EXP_LNKCAP_ASPM_L0S);
-		dw_pcie_writel_dbi(rk_pcie->pci, bridge->pcie_cap + PCI_EXP_LNKCTL, val);
 	}
+
+	if (enable) {
+		if (rk_pcie->l1ss_ctl1) {
+			dw_pcie_writel_dbi(rk_pcie->pci, bridge->l1ss + PCI_L1SS_CTL2,
+					   rk_pcie->l1ss_ctl2);
+			dw_pcie_writel_dbi(rk_pcie->pci, bridge->l1ss + PCI_L1SS_CTL1,
+					   rk_pcie->l1ss_ctl1);
+			if (bridge->ltr_path)
+				pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2, 0x0400);
+		}
+	}
+
+	if (enable) {
+		list_for_each_entry(pdev, &root_bus->devices, bus_list) {
+			if (PCI_SLOT(pdev->devfn) == 0) {
+				if (rk_pcie->l1ss_ctl1) {
+					pci_write_config_dword(pdev, pdev->l1ss + PCI_L1SS_CTL2,
+							       rk_pcie->l1ss_ctl2);
+					pci_write_config_dword(pdev, pdev->l1ss + PCI_L1SS_CTL1,
+							       rk_pcie->l1ss_ctl1);
+				}
+			}
+		}
+	}
+
+	if (enable)
+		dw_pcie_writel_dbi(rk_pcie->pci, bridge->pcie_cap + PCI_EXP_LNKCTL, rk_pcie->aspm);
 
 	list_for_each_entry(pdev, &root_bus->devices, bus_list) {
 		if (PCI_SLOT(pdev->devfn) == 0) {
 			if (pci_set_power_state(pdev, PCI_D0))
 				dev_err(rk_pcie->pci->dev,
-					"Failed to transition %s to D3hot state\n",
+					"Failed to transition %s to D0 state\n",
 					dev_name(&pdev->dev));
-			if (enable) {
-				if (rk_pcie->l1ss_ctl1) {
-					pci_read_config_dword(pdev, pdev->l1ss + PCI_L1SS_CTL1, &val);
-					val &= ~PCI_L1SS_CTL1_L1SS_MASK;
-					val |= (rk_pcie->l1ss_ctl1 & PCI_L1SS_CTL1_L1SS_MASK);
-					pci_write_config_dword(pdev, pdev->l1ss + PCI_L1SS_CTL1, val);
-				}
-
+			if (enable)
 				pcie_capability_clear_and_set_word(pdev, PCI_EXP_LNKCTL,
-								   PCI_EXP_LNKCTL_ASPMC, rk_pcie->aspm);
-			} else {
-				pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
-			}
+								   PCI_EXP_LNKCTL_ASPMC,
+								   rk_pcie->aspm);
+			else
+				pci_disable_link_state(pdev,
+						       PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
 		}
+	}
+
+	if (!enable) {
+		val = dw_pcie_readl_dbi(rk_pcie->pci, bridge->pcie_cap + PCI_EXP_LNKCTL);
+		val &= ~(PCI_EXP_LNKCTL_ASPM_L1 | PCI_EXP_LNKCTL_ASPM_L0S);
+		dw_pcie_writel_dbi(rk_pcie->pci, bridge->pcie_cap + PCI_EXP_LNKCTL, val);
 	}
 }
 #endif
@@ -1657,6 +1711,9 @@ int rockchip_dw_pcie_pm_ctrl_for_user(struct pci_dev *dev, enum rockchip_pcie_pm
 	case ROCKCHIP_PCIE_PM_CTRL_RESET:
 		rockchip_dw_pcie_suspend(rk_pcie->pci->dev);
 		rockchip_dw_pcie_resume(rk_pcie->pci->dev);
+		break;
+	case ROCKCHIP_PCIE_PM_RETRAIN_LINK:
+		rk_pcie_retrain(pci);
 		break;
 	default:
 		dev_err(rk_pcie->pci->dev, "%s flag=%d invalid\n", __func__, flag);
