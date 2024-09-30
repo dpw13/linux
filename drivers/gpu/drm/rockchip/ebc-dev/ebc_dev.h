@@ -63,6 +63,7 @@
 #define EBC_SET_FB_UNBLANK			(0x7014)
 #define EBC_ENABLE_REPAIR			(0x7015)
 #define EBC_DISABLE_REPAIR			(0x7016)
+#define EBC_GET_NORMAL_REPAIR		(0x7017)
 
 /*
  * IMPORTANT: Those values is corresponding to android hardware program,
