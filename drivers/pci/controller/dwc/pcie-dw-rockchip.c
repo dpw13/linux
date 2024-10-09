@@ -125,6 +125,7 @@ struct rk_pcie {
 	unsigned int			clk_cnt;
 	struct gpio_desc		*rst_gpio;
 	u32				perst_inactive_ms;
+	u32				s2r_perst_inactive_ms;
 	struct gpio_desc		*prsnt_gpio;
 	struct dma_trx_obj		*dma_obj;
 	bool				in_suspend;
@@ -369,16 +370,7 @@ static int rk_pcie_establish_link(struct dw_pcie *pci)
 		 * finishing training. So there must be timeout here. These kinds of devices
 		 * need rescan devices by its driver when used. So no need to waste time waiting
 		 * for training pass.
-		 */
-		if (rk_pcie->in_suspend && rk_pcie->skip_scan_in_resume) {
-			rfkill_get_wifi_power_state(&power);
-			if (!power) {
-				gpiod_set_value_cansleep(rk_pcie->rst_gpio, 1);
-				return 0;
-			}
-		}
-
-		/*
+		 *
 		 * PCIe requires the refclk to be stable for 100µs prior to releasing
 		 * PERST and T_PVPERL (Power stable to PERST# inactive) should be a
 		 * minimum of 100ms.  See table 2-4 in section 2.6.2 AC, the PCI Express
@@ -386,7 +378,20 @@ static int rk_pcie_establish_link(struct dw_pcie *pci)
 		 * requuirement here. We add a 200ms by default for sake of hoping everthings
 		 * work fine. If it doesn't, please add more in DT node by add rockchip,perst-inactive-ms.
 		 */
-		msleep(rk_pcie->perst_inactive_ms);
+		if (rk_pcie->in_suspend && rk_pcie->skip_scan_in_resume) {
+			rfkill_get_wifi_power_state(&power);
+			if (!power) {
+				gpiod_set_value_cansleep(rk_pcie->rst_gpio, 1);
+				return 0;
+			}
+			if (rk_pcie->s2r_perst_inactive_ms)
+				usleep_range(rk_pcie->s2r_perst_inactive_ms * 1000,
+					(rk_pcie->s2r_perst_inactive_ms + 1) * 1000);
+		} else {
+			usleep_range(rk_pcie->perst_inactive_ms * 1000,
+				(rk_pcie->perst_inactive_ms + 1) * 1000);
+		}
+
 		gpiod_set_value_cansleep(rk_pcie->rst_gpio, 1);
 
 		/*
@@ -662,6 +667,10 @@ static int rk_pcie_resource_get(struct platform_device *pdev,
 	if (device_property_read_u32(&pdev->dev, "rockchip,perst-inactive-ms",
 				     &rk_pcie->perst_inactive_ms))
 		rk_pcie->perst_inactive_ms = 200;
+
+	if (device_property_read_u32(&pdev->dev, "rockchip,s2r-perst-inactive-ms",
+				     &rk_pcie->s2r_perst_inactive_ms))
+		rk_pcie->s2r_perst_inactive_ms = rk_pcie->perst_inactive_ms;
 
 	rk_pcie->prsnt_gpio = devm_gpiod_get_optional(&pdev->dev, "prsnt", GPIOD_IN);
 	if (IS_ERR_OR_NULL(rk_pcie->prsnt_gpio))
@@ -1074,6 +1083,7 @@ static int rockchip_pcie_rasdes_show(struct seq_file *s, void *unused)
 
 	return 0;
 }
+
 static int rockchip_pcie_rasdes_open(struct inode *inode, struct file *file)
 {
 	return single_open(file, rockchip_pcie_rasdes_show,
@@ -1122,6 +1132,154 @@ static const struct file_operations rockchip_pcie_rasdes_ops = {
 	.write = rockchip_pcie_rasdes_write,
 };
 
+#define INJECTION_EVENT(ss, offset, mask, shift) \
+	seq_printf(s, ss "0x%x\n", (dw_pcie_readl_dbi(pcie->pci, cap_base + offset) >> shift) & mask)
+
+static int rockchip_pcie_fault_inject_show(struct seq_file *s, void *unused)
+{
+	struct rk_pcie *pcie = s->private;
+	u32 cap_base;
+
+	cap_base = dw_pcie_find_ext_capability(pcie->pci, PCI_EXT_CAP_ID_VNDR);
+	if (!cap_base) {
+		dev_err(pcie->pci->dev, "Not able to find RASDES CAP!\n");
+		return -EINVAL;
+	}
+
+	INJECTION_EVENT("ERROR_INJECTION0_ENABLE: ", 0x30, 1, 0);
+	INJECTION_EVENT("ERROR_INJECTION1_ENABLE: ", 0x30, 1, 1);
+	INJECTION_EVENT("ERROR_INJECTION2_ENABLE: ", 0x30, 1, 2);
+	INJECTION_EVENT("ERROR_INJECTION3_ENABLE: ", 0x30, 1, 3);
+	INJECTION_EVENT("ERROR_INJECTION4_ENABLE: ", 0x30, 1, 4);
+	INJECTION_EVENT("ERROR_INJECTION5_ENABLE: ", 0x30, 1, 5);
+	INJECTION_EVENT("ERROR_INJECTION6_ENABLE: ", 0x30, 1, 6);
+
+	INJECTION_EVENT("EINJ0_CRC_TYPE: ", 0x34, 0xf, 8);
+	INJECTION_EVENT("EINJ0_COUNT: ", 0x34, 0xff, 0);
+
+	INJECTION_EVENT("EINJ1_BAD_SEQNUM: ", 0x38, 0x1fff, 16);
+	INJECTION_EVENT("EINJ1_SEQNUM_TYPE: ", 0x38, 1, 8);
+	INJECTION_EVENT("EINJ1_COUNT: ", 0x38, 0xff, 0);
+
+	INJECTION_EVENT("EINJ2_DLLP_TYPE: ", 0x3c, 0x3, 8);
+	INJECTION_EVENT("EINJ2_COUNT: ", 0x3c, 0xff, 0);
+
+	INJECTION_EVENT("EINJ3_SYMBOL_TYPE: ", 0x40, 0x7, 8);
+	INJECTION_EVENT("EINJ3_COUNT: ", 0x40, 0xff, 0);
+
+	INJECTION_EVENT("EINJ4_BAD_UPDFC_VALUE: ", 0x44, 0x1fff, 16);
+	INJECTION_EVENT("EINJ4_VC_NUMBER: ", 0x44, 0x7, 12);
+	INJECTION_EVENT("EINJ4_UPDFC_TYPE: ", 0x44, 0x7, 8);
+	INJECTION_EVENT("EINJ4_COUNT: ", 0x44, 0xff, 0);
+
+	INJECTION_EVENT("EINJ5_SPECIFIED_TLP: ", 0x48, 1, 8);
+	INJECTION_EVENT("EINJ5_COUNT: ", 0x48, 0xff, 0);
+
+	INJECTION_EVENT("EINJ6_PACKET_TYPE: ", 0x8c, 0x7, 9);
+	INJECTION_EVENT("EINJ6_INVERTED_CONTROL: ", 0x8c, 1, 8);
+	INJECTION_EVENT("EINJ6_COUNT: ", 0x8c, 0xff, 0);
+
+	return 0;
+}
+
+static int rockchip_pcie_fault_inject_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, rockchip_pcie_fault_inject_show,
+			   inode->i_private);
+}
+
+static int rockchip_pcie_check_einj_type(struct device *dev, int einj, int type)
+{
+	int i;
+	static const int vaild_einj_type[7][9] = {
+		{ 0, 1, 2, 3, 4, 5, 6, 8, 11 },	/* einj0 */
+		{ 0, 1 },			/* einj1 */
+		{ 0, 1, 2 },			/* einj2 */
+		{ 0, 1, 2, 3, 4, 5, 6, 7 },	/* einj3 */
+		{ 0, 1, 2, 3, 4, 5, 6 },	/* einj4 */
+		{ 0, 1 },			/* einj5 */
+		{ 0, 1, 2 },			/* einj6 */
+	};
+
+	for (i = 0; i < ARRAY_SIZE(vaild_einj_type[einj]); i++) {
+		if (type == vaild_einj_type[einj][i])
+			return 0;
+	}
+
+	dev_err(dev, "Invalid error type 0x%x of einj%d\n", type, einj);
+	return -EINVAL;
+}
+
+static ssize_t rockchip_pcie_fault_inject_write(struct file *file,
+					const char __user *ubuf,
+					size_t cnt, loff_t *ppos)
+{
+	struct seq_file *s = file->private_data;
+	struct rk_pcie *pcie = s->private;
+	char buf[32] = {0};
+	int cap_base;
+	int einj, enable, type, count;
+	u32 val, type_off, einj_off;
+	struct device *dev = pcie->pci->dev;
+
+	if (copy_from_user(&buf, ubuf, min_t(size_t, sizeof(buf) - 1, cnt)))
+		return -EFAULT;
+
+	cap_base = dw_pcie_find_ext_capability(pcie->pci, PCI_EXT_CAP_ID_VNDR);
+	if (!cap_base) {
+		dev_err(dev, "Not able to find RASDES CAP!\n");
+		return -EINVAL;
+	}
+
+	if (sscanf(buf, "%d %d %d %d", &einj, &enable, &type, &count) < 4) {
+		dev_err(dev,
+			"Invalid format, should be <einj enable type count>\n");
+		return -EINVAL;
+	}
+
+	if (einj < 0 || einj > 6) {
+		dev_err(dev, "Invalid 1st parameter, should be [0, 6]\n");
+		return -EINVAL;
+	} else if (enable < 0 || enable > 1) {
+		dev_err(dev, "Invalid 2nd parameter, should be 0 or 1\n");
+		return -EINVAL;
+	} else if (count > 0xff || count < 0) {
+		dev_err(dev, "Invalid 4th parameter, should be [0, 255]\n");
+		return -EINVAL;
+	}
+
+	if (rockchip_pcie_check_einj_type(dev, einj, type))
+		return -EINVAL;
+
+	/* Disable operation should be done first */
+	val = dw_pcie_readl_dbi(pcie->pci, cap_base + 0x30);
+	val &= ~(0x1 << einj);
+	dw_pcie_writel_dbi(pcie->pci, cap_base + 0x30, val);
+
+	if (!enable)
+		return cnt;
+
+	einj_off = (einj == 6) ? 0x8c : (einj * 0x4);
+	type_off = (einj == 6) ? 9 : 8;
+	val = dw_pcie_readl_dbi(pcie->pci, cap_base + 0x34 + einj_off);
+	val &= ~(0xff);
+	val &= ~(0xff << type_off);
+	val |= count | type << type_off;
+	dw_pcie_writel_dbi(pcie->pci, cap_base + 0x34 + einj_off, val);
+	val = dw_pcie_readl_dbi(pcie->pci, cap_base + 0x30);
+	val |= enable << einj; /* If enabling, do it at last */
+	dw_pcie_writel_dbi(pcie->pci, cap_base + 0x30, val);
+
+	return cnt;
+}
+
+static const struct file_operations rockchip_pcie_fault_inject_ops = {
+	.owner = THIS_MODULE,
+	.open = rockchip_pcie_fault_inject_open,
+	.write = rockchip_pcie_fault_inject_write,
+	.read = seq_read,
+};
+
 static int rockchip_pcie_fifo_show(struct seq_file *s, void *data)
 {
 	struct rk_pcie *pcie = (struct rk_pcie *)dev_get_drvdata(s->private);
@@ -1158,6 +1316,11 @@ static int rockchip_pcie_debugfs_init(struct rk_pcie *pcie)
 				    rockchip_pcie_fifo_show);
 	file = debugfs_create_file("err_event", 0644, pcie->debugfs,
 				   pcie, &rockchip_pcie_rasdes_ops);
+	if (!file)
+		goto remove;
+
+	file = debugfs_create_file("fault_injection", 0644, pcie->debugfs,
+				   pcie, &rockchip_pcie_fault_inject_ops);
 	if (!file)
 		goto remove;
 
@@ -1343,7 +1506,6 @@ static int rk_pcie_really_probe(void *p)
 
 	reset_control_assert(rk_pcie->rsts);
 	udelay(10);
-	reset_control_deassert(rk_pcie->rsts);
 
 	ret = clk_bulk_prepare_enable(rk_pcie->clk_cnt, rk_pcie->clks);
 	if (ret) {
@@ -1355,6 +1517,14 @@ static int rk_pcie_really_probe(void *p)
 	if (ret) {
 		dev_err_probe(dev, ret, "phy init failed\n");
 		goto disable_clk;
+	}
+
+	reset_control_deassert(rk_pcie->rsts);
+
+	ret = phy_calibrate(rk_pcie->phy);
+	if (ret) {
+		dev_err(dev, "phy lock failed\n");
+		goto disable_phy;
 	}
 
 	/* 5. host registers manipulation */
