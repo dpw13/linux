@@ -1663,7 +1663,7 @@ static int rk_pcie_remove(struct platform_device *pdev)
 		}
 	}
 
-	dw_pcie_host_deinit(&rk_pcie->pci->pp);
+	if (IS_ENABLED(CONFIG_NO_GKI)) dw_pcie_host_deinit(&rk_pcie->pci->pp);
 	rk_pcie_writel_apb(rk_pcie, PCIE_CLIENT_INTR_MASK, 0xffffffff);
 	destroy_workqueue(rk_pcie->hot_rst_wq);
 	pcie_dw_dmatest_unregister(rk_pcie->dma_obj);
