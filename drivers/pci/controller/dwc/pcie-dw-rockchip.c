@@ -768,37 +768,13 @@ retry_regulator:
 	rk_pcie->slot_power_limit = of_pci_get_slot_power_limit(pdev->dev.of_node,
 					&rk_pcie->slot_power_limit_value,
 					&rk_pcie->slot_power_limit_scale);
-	return 0;
-}
 
-static int rk_pcie_phy_init(struct rk_pcie *rk_pcie)
-{
-	int ret;
-	struct device *dev = rk_pcie->pci->dev;
-
-	rk_pcie->phy = devm_phy_optional_get(dev, "pcie-phy");
+	rk_pcie->phy = devm_phy_optional_get(&pdev->dev, "pcie-phy");
 	if (IS_ERR(rk_pcie->phy)) {
 		if (PTR_ERR(rk_pcie->phy) != -EPROBE_DEFER)
-			dev_info(dev, "missing phy\n");
+			dev_info(&pdev->dev, "missing phy\n");
 		return PTR_ERR(rk_pcie->phy);
 	}
-
-	ret = phy_set_mode_ext(rk_pcie->phy, PHY_MODE_PCIE, PHY_MODE_PCIE_RC);
-	if (ret) {
-		dev_err(dev, "fail to set phy to rc mode, err %d\n", ret);
-		return ret;
-	}
-
-	if (rk_pcie->bifurcation)
-		phy_set_mode_ext(rk_pcie->phy, PHY_MODE_PCIE, PHY_MODE_PCIE_BIFURCATION);
-
-	ret = phy_init(rk_pcie->phy);
-	if (ret < 0) {
-		dev_err(dev, "fail to init phy, err %d\n", ret);
-		return ret;
-	}
-
-	phy_power_on(rk_pcie->phy);
 
 	return 0;
 }
@@ -1396,14 +1372,6 @@ static int rk_pcie_init_irq_and_wq(struct rk_pcie *rk_pcie, struct platform_devi
 	struct device *dev = rk_pcie->pci->dev;
 	int ret;
 
-	/*
-	 * Misc interrupts was masked by default. However, they will be
-	 * unmasked by FW before jumpping into kernel. Mask all misc interrupts,
-	 * as we don't need to ack them before registering irq. And they will be
-	 * unmasked later.
-	 */
-	rk_pcie_writel_apb(rk_pcie, PCIE_CLIENT_INTR_MASK, 0xffffffff);
-
 	ret = rk_pcie_request_sys_irq(rk_pcie, pdev);
 	if (ret) {
 		dev_err(dev, "pcie irq init failed\n");
@@ -1483,6 +1451,83 @@ static void rk_pcie_set_power_limit(struct rk_pcie *rk_pcie)
 	dw_pcie_writew_dbi(rk_pcie->pci, reg + PCI_EXP_SLTCAP, val);
 }
 
+static int rk_pcie_hardware_io_config(struct rk_pcie *rk_pcie)
+{
+	struct dw_pcie *pci = rk_pcie->pci;
+	struct device *dev = pci->dev;
+	int ret;
+
+	if (!IS_ERR_OR_NULL(rk_pcie->prsnt_gpio)) {
+		if (!gpiod_get_value(rk_pcie->prsnt_gpio)) {
+			dev_info(dev, "device isn't present\n");
+			return -ENODEV;
+		}
+	}
+
+	ret = rk_pcie_enable_power(rk_pcie);
+	if (ret)
+		return ret;
+
+	reset_control_assert(rk_pcie->rsts);
+	udelay(10);
+
+	ret = clk_bulk_prepare_enable(rk_pcie->clk_cnt, rk_pcie->clks);
+	if (ret) {
+		dev_err(dev, "clock init failed\n");
+		goto disable_vpcie3v3;
+	}
+
+	ret = phy_set_mode_ext(rk_pcie->phy, PHY_MODE_PCIE, PHY_MODE_PCIE_RC);
+	if (ret) {
+		dev_err(dev, "fail to set phy to rc mode\n");
+		goto disable_clk;
+	}
+
+	if (rk_pcie->bifurcation)
+		phy_set_mode_ext(rk_pcie->phy, PHY_MODE_PCIE, PHY_MODE_PCIE_BIFURCATION);
+
+	ret = phy_init(rk_pcie->phy);
+	if (ret < 0) {
+		dev_err(dev, "fail to init phy\n");
+		goto disable_clk;
+	}
+
+	phy_power_on(rk_pcie->phy);
+
+	reset_control_deassert(rk_pcie->rsts);
+
+	ret = phy_calibrate(rk_pcie->phy);
+	if (ret) {
+		dev_err(dev, "phy lock failed\n");
+		goto disable_phy;
+	}
+
+	return 0;
+
+disable_phy:
+	phy_power_off(rk_pcie->phy);
+	phy_exit(rk_pcie->phy);
+disable_clk:
+	clk_bulk_disable_unprepare(rk_pcie->clk_cnt, rk_pcie->clks);
+disable_vpcie3v3:
+	reset_control_assert(rk_pcie->rsts);
+	rk_pcie_disable_power(rk_pcie);
+
+	return ret;
+}
+
+static int rk_pcie_hardware_io_unconfig(struct rk_pcie *rk_pcie)
+{
+	phy_power_off(rk_pcie->phy);
+	phy_exit(rk_pcie->phy);
+	clk_bulk_disable_unprepare(rk_pcie->clk_cnt, rk_pcie->clks);
+	reset_control_assert(rk_pcie->rsts);
+	rk_pcie_disable_power(rk_pcie);
+	gpiod_set_value_cansleep(rk_pcie->rst_gpio, 0);
+
+	return 0;
+}
+
 static int rk_pcie_host_config(struct rk_pcie *rk_pcie)
 {
 	struct dw_pcie *pci = rk_pcie->pci;
@@ -1518,6 +1563,14 @@ static int rk_pcie_host_config(struct rk_pcie *rk_pcie)
 
 	rk_pcie_set_rc_mode(rk_pcie);
 
+	rk_pcie_writel_apb(rk_pcie, PCIE_CLIENT_INTR_MASK_LEGACY,
+			   rk_pcie->intx | 0xffff0000);
+
+	return 0;
+}
+
+static int rk_pcie_host_unconfig(struct rk_pcie *rk_pcie)
+{
 	return 0;
 }
 
@@ -1555,6 +1608,7 @@ static int rk_pcie_really_probe(void *p)
 	/* 2. variables assignment */
 	rk_pcie->pci = pci;
 	rk_pcie->msi_vector_num = data ? data->msi_vector_num : 0;
+	rk_pcie->intx = 0xffffffff;
 	pci->dev = dev;
 	pci->ops = &dw_pcie_ops;
 	platform_set_drvdata(pdev, rk_pcie);
@@ -1567,55 +1621,26 @@ static int rk_pcie_really_probe(void *p)
 	}
 
 	/* 4. hardware io settings */
-	if (!IS_ERR_OR_NULL(rk_pcie->prsnt_gpio)) {
-		if (!gpiod_get_value(rk_pcie->prsnt_gpio)) {
-			dev_info(dev, "device isn't present\n");
-			ret = -ENODEV;
-			goto release_driver;
-		}
-	}
-
-	ret = rk_pcie_enable_power(rk_pcie);
-	if (ret)
+	ret = rk_pcie_hardware_io_config(rk_pcie);
+	if (ret) {
+		dev_err_probe(dev, ret, "setting hardware io failed\n");
 		goto release_driver;
+	}
 
 	pm_runtime_enable(dev);
 	pm_runtime_get_sync(pci->dev);
 
-	reset_control_assert(rk_pcie->rsts);
-	udelay(10);
-
-	ret = clk_bulk_prepare_enable(rk_pcie->clk_cnt, rk_pcie->clks);
-	if (ret) {
-		dev_err_probe(dev, ret, "clock init failed\n");
-		goto disable_vpcie3v3;
-	}
-
-	ret = rk_pcie_phy_init(rk_pcie);
-	if (ret) {
-		dev_err_probe(dev, ret, "phy init failed\n");
-		goto disable_clk;
-	}
-
-	reset_control_deassert(rk_pcie->rsts);
-
-	ret = phy_calibrate(rk_pcie->phy);
-	if (ret) {
-		dev_err(dev, "phy lock failed\n");
-		goto disable_phy;
-	}
-
 	/* 5. host registers manipulation */
 	ret = rk_pcie_host_config(rk_pcie);
 	if (ret) {
-		dev_err_probe(dev, ret, "rk_pcie_host_config failed\n");
-		goto disable_clk;
+		dev_err_probe(dev, ret, "host registers manipulation failed\n");
+		goto unconfig_hardware_io;
 	}
 
 	/* 6. software process */
 	ret = rk_pcie_init_irq_and_wq(rk_pcie, pdev);
 	if (ret)
-		goto disable_phy;
+		goto unconfig_host;
 
 	ret = rk_add_pcie_port(rk_pcie, pdev);
 
@@ -1663,15 +1688,12 @@ deinit_irq_and_wq:
 	destroy_workqueue(rk_pcie->hot_rst_wq);
 	if (rk_pcie->irq_domain)
 		irq_domain_remove(rk_pcie->irq_domain);
-disable_phy:
-	phy_power_off(rk_pcie->phy);
-	phy_exit(rk_pcie->phy);
-disable_clk:
-	clk_bulk_disable_unprepare(rk_pcie->clk_cnt, rk_pcie->clks);
-disable_vpcie3v3:
+unconfig_host:
+	rk_pcie_host_unconfig(rk_pcie);
+unconfig_hardware_io:
 	pm_runtime_put(dev);
 	pm_runtime_disable(dev);
-	rk_pcie_disable_power(rk_pcie);
+	rk_pcie_hardware_io_unconfig(rk_pcie);
 release_driver:
 	if (rk_pcie)
 		rk_pcie->finish_probe = true;
@@ -1745,14 +1767,12 @@ static int rk_pcie_remove(struct platform_device *pdev)
 	}
 
 	device_init_wakeup(dev, false);
+
+	rk_pcie_host_unconfig(rk_pcie);
+
 	pm_runtime_put(dev);
 	pm_runtime_disable(dev);
-	phy_power_off(rk_pcie->phy);
-	phy_exit(rk_pcie->phy);
-	clk_bulk_disable_unprepare(rk_pcie->clk_cnt, rk_pcie->clks);
-	reset_control_assert(rk_pcie->rsts);
-	rk_pcie_disable_power(rk_pcie);
-	gpiod_set_value_cansleep(rk_pcie->rst_gpio, 0);
+	rk_pcie_hardware_io_unconfig(rk_pcie);
 
 	return 0;
 }
@@ -1934,17 +1954,12 @@ no_l2:
 	/* make sure assert phy success */
 	usleep_range(200, 300);
 
-	phy_power_off(rk_pcie->phy);
-	phy_exit(rk_pcie->phy);
-
 	rk_pcie->intx = rk_pcie_readl_apb(rk_pcie, PCIE_CLIENT_INTR_MASK_LEGACY);
 
-	clk_bulk_disable_unprepare(rk_pcie->clk_cnt, rk_pcie->clks);
+	rk_pcie_host_unconfig(rk_pcie);
+	rk_pcie_hardware_io_unconfig(rk_pcie);
 
 	rk_pcie->in_suspend = true;
-
-	gpiod_set_value_cansleep(rk_pcie->rst_gpio, 0);
-	ret = rk_pcie_disable_power(rk_pcie);
 
 	return ret;
 }
@@ -1952,63 +1967,47 @@ no_l2:
 static int __maybe_unused rockchip_dw_pcie_resume(struct device *dev)
 {
 	struct rk_pcie *rk_pcie = dev_get_drvdata(dev);
+	struct dw_pcie *pci = rk_pcie->pci;
 	int ret;
 
-	reset_control_assert(rk_pcie->rsts);
-	udelay(10);
-	reset_control_deassert(rk_pcie->rsts);
-
-	ret = rk_pcie_enable_power(rk_pcie);
-	if (ret)
-		return ret;
-
-	ret = clk_bulk_prepare_enable(rk_pcie->clk_cnt, rk_pcie->clks);
+	/* 4. hardware io settings */
+	ret = rk_pcie_hardware_io_config(rk_pcie);
 	if (ret) {
-		dev_err(dev, "failed to prepare enable pcie bulk clks: %d\n", ret);
+		dev_err(dev, "setting hardware io failed, ret=%d\n", ret);
 		return ret;
 	}
 
-	ret = phy_set_mode_ext(rk_pcie->phy, PHY_MODE_PCIE, PHY_MODE_PCIE_RC);
+	/* 5. host registers manipulation */
+	ret = rk_pcie_host_config(rk_pcie);
 	if (ret) {
-		dev_err(dev, "fail to set phy to rc mode, err %d\n", ret);
-		return ret;
+		dev_err(dev, "host registers manipulation failed, ret=%d\n", ret);
+		goto unconfig_hardware_io;
 	}
 
-	ret = phy_init(rk_pcie->phy);
-	if (ret < 0) {
-		dev_err(dev, "fail to init phy, err %d\n", ret);
-		return ret;
-	}
+	/* 6. software process */
+	dw_pcie_setup_rc(&pci->pp);
 
-	phy_power_on(rk_pcie->phy);
-
-	dw_pcie_dbi_ro_wr_en(rk_pcie->pci);
-
-	rk_pcie_fast_link_setup(rk_pcie);
-
-	rk_pcie_set_rc_mode(rk_pcie);
-
-	dw_pcie_setup_rc(&rk_pcie->pci->pp);
-
-	rk_pcie_set_power_limit(rk_pcie);
-
-	rk_pcie_writel_apb(rk_pcie, PCIE_CLIENT_INTR_MASK_LEGACY,
-			   rk_pcie->intx | 0xffff0000);
-
-	ret = rk_pcie_establish_link(rk_pcie->pci);
+	ret = rk_pcie_establish_link(pci);
 	if (ret) {
-		dev_err(dev, "failed to establish pcie link\n");
-		goto err;
+		dev_err(dev, "failed to establish pcie link, ret=%d\n", ret);
+		goto unconfig_host;
 	}
 
-	dw_pcie_dbi_ro_wr_dis(rk_pcie->pci);
+	/* Disable BAR0 BAR1 */
+	dw_pcie_writel_dbi2(pci, PCI_BASE_ADDRESS_0, 0x0);
+	dw_pcie_writel_dbi2(pci, PCI_BASE_ADDRESS_1, 0x0);
+
+	dw_pcie_dbi_ro_wr_dis(pci);
 	rk_pcie->in_suspend = false;
 	if (rk_pcie->skip_scan_in_resume)
 		device_init_wakeup(dev, true);
 
 	return 0;
-err:
-	rk_pcie_disable_power(rk_pcie);
+
+unconfig_host:
+	rk_pcie_host_unconfig(rk_pcie);
+unconfig_hardware_io:
+	rk_pcie_hardware_io_unconfig(rk_pcie);
 
 	return ret;
 }
