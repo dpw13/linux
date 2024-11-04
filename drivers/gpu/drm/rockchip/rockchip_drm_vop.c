@@ -1993,8 +1993,8 @@ static void vop_plane_atomic_disable(struct drm_plane *plane,
 	if (!old_state->crtc)
 		return;
 
-	rockchip_drm_dbg(vop->dev, VOP_DEBUG_PLANE, "disable win%d-area%d by %s\n",
-			 win->win_id, win->area_id, current->comm);
+	rockchip_drm_dbg_thread_info(vop->dev, VOP_DEBUG_PLANE, "disable win%d-area%d",
+				     win->win_id, win->area_id);
 
 	spin_lock(&vop->reg_lock);
 
@@ -2249,12 +2249,12 @@ static void vop_plane_atomic_update(struct drm_plane *plane,
 
 	if (rockchip_afbc(plane, fb->modifier))
 		afbc_en = true;
-	rockchip_drm_dbg(vop->dev, VOP_DEBUG_PLANE,
-			 "update win%d-area%d [%dx%d->%dx%d@(%d, %d)] zpos:%d fmt[%p4cc%s] addr[%pad] by %s\n",
-			 win->win_id, win->area_id, actual_w, actual_h,
-			 dsp_w, dsp_h, dest->x1, dest->y1, vop_plane_state->zpos, &fb->format->format,
-			 afbc_en ? "[AFBC]" : "",
-			 &vop_plane_state->yrgb_mst, current->comm);
+	rockchip_drm_dbg_thread_info(vop->dev, VOP_DEBUG_PLANE,
+				     "update win%d-area%d [%dx%d->%dx%d@(%d, %d)] zpos:%d fmt[%p4cc%s] addr[%pad]",
+				     win->win_id, win->area_id, actual_w, actual_h,
+				     dsp_w, dsp_h, dest->x1, dest->y1, vop_plane_state->zpos, &fb->format->format,
+				     afbc_en ? "[AFBC]" : "",
+				     &vop_plane_state->yrgb_mst);
 	/*
 	 * spi interface(vop_plane_state->yrgb_kvaddr, fb->pixel_format,
 	 * actual_w, actual_h)
@@ -4363,7 +4363,7 @@ static void vop_crtc_atomic_flush(struct drm_crtc *crtc,
 	spin_lock_irqsave(&vop->irq_lock, flags);
 	vop->pre_overlay = s->hdr.pre_overlay;
 	vop_cfg_done(vop);
-	rockchip_drm_dbg(vop->dev, VOP_DEBUG_CFG_DONE, "cfg_done\n\n");
+	rockchip_drm_dbg(vop->dev, VOP_DEBUG_CFG_DONE, "cfg_done\n");
 	/*
 	 * rk322x and rk332x odd-even field will mistake when in interlace mode.
 	 * we must switch to frame effect before switch screen and switch to
@@ -4730,7 +4730,7 @@ static irqreturn_t vop_isr(int irq, void *data)
 		 * frame effective, but actually it's effective immediately, so
 		 * we config this register at frame start.
 		 */
-		rockchip_drm_dbg(vop->dev, VOP_DEBUG_VSYNC, "vsync\n");
+		rockchip_drm_dbg(vop->dev, VOP_DEBUG_VSYNC, "vsync");
 		spin_lock_irqsave(&vop->irq_lock, flags);
 		VOP_CTRL_SET(vop, level2_overlay_en, vop->pre_overlay);
 		VOP_CTRL_SET(vop, alpha_hard_calc, vop->pre_overlay);
