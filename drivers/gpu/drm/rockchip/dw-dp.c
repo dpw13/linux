@@ -3814,26 +3814,6 @@ static void dw_dp_link_disable(struct dw_dp *dp)
 	link->train.channel_equalized = false;
 }
 
-static void dw_dp_reset(struct dw_dp *dp)
-{
-	int val;
-
-	disable_irq(dp->irq);
-	regmap_update_bits(dp->regmap, DPTX_SOFT_RESET_CTRL, CONTROLLER_RESET,
-			   FIELD_PREP(CONTROLLER_RESET, 1));
-	udelay(100);
-	regmap_update_bits(dp->regmap, DPTX_SOFT_RESET_CTRL, CONTROLLER_RESET,
-			   FIELD_PREP(CONTROLLER_RESET, 0));
-
-	dw_dp_init(dp);
-	if (!dp->hpd_gpio) {
-		regmap_read_poll_timeout(dp->regmap, DPTX_HPD_STATUS, val,
-					 FIELD_GET(HPD_HOT_PLUG, val), 200, 200000);
-		regmap_write(dp->regmap, DPTX_HPD_STATUS, HPD_HOT_PLUG);
-	}
-	enable_irq(dp->irq);
-}
-
 static void dw_dp_mst_encoder_atomic_disable(struct drm_encoder *encoder,
 					     struct drm_atomic_state *state)
 {
@@ -3886,10 +3866,8 @@ static void dw_dp_mst_encoder_atomic_disable(struct drm_encoder *encoder,
 	drm_dp_send_power_updown_phy(&dp->mst_mgr, mst_conn->port, false);
 
 	dw_dp_video_disable(dp, mst_enc->stream_id);
-	if (!dp->active_mst_links) {
+	if (!dp->active_mst_links)
 		dw_dp_link_disable(dp);
-		dw_dp_reset(dp);
-	}
 
 	pm_runtime_mark_last_busy(dp->dev);
 	pm_runtime_put_autosuspend(dp->dev);
@@ -4470,7 +4448,6 @@ static void dw_dp_bridge_atomic_disable(struct drm_bridge *bridge,
 	dw_dp_video_disable(dp, 0);
 	dw_dp_link_disable(dp);
 	bitmap_zero(dp->sdp_reg_bank, SDP_REG_BANK_SIZE);
-	dw_dp_reset(dp);
 
 	extcon_set_state_sync(dp->audio->extcon, EXTCON_DISP_DP, false);
 	dw_dp_audio_handle_plugged_change(dp->audio, false);
@@ -4605,6 +4582,8 @@ static u32 *dw_dp_bridge_atomic_get_output_bus_fmts(struct drm_bridge *bridge,
 	u32 *output_fmts;
 	unsigned int i, j = 0;
 
+	dp->eotf_type = dw_dp_get_eotf(conn_state);
+
 	if (dp->split_mode || dp->dual_connector_split)
 		drm_mode_convert_to_origin_mode(&mode);
 
@@ -4674,6 +4653,14 @@ static u32 *dw_dp_bridge_atomic_get_output_bus_fmts(struct drm_bridge *bridge,
 		dw_dp_swap_fmts(output_fmts, j);
 
 	*num_output_fmts = j;
+
+	if (*num_output_fmts == 0) {
+		dev_warn(dp->dev, "here is not satisfied the require bus format\n");
+		dev_info(dp->dev,
+			 "max bpc:%d, max fmt:%x, lanes:%d, rate:%d, bpc:%d, fmt:%d, eotf:%d\n",
+			 conn_state->max_bpc, di->color_formats, link->lanes, link->max_rate,
+			 dp_state->bpc, dp_state->color_format, dp->eotf_type);
+	}
 
 	return output_fmts;
 }
@@ -5009,24 +4996,30 @@ static void dw_dp_hpd_work(struct work_struct *work)
 	dev_dbg(dp->dev, "got hpd irq - %s\n", long_hpd ? "long" : "short");
 
 	if (!long_hpd) {
+		phy_power_on(dp->phy);
 		if (dp->is_mst) {
 			dw_dp_check_mst_status(dp);
+			phy_power_off(dp->phy);
 			return;
 		}
 
-		if (dw_dp_hpd_short_pulse(dp))
+		if (dw_dp_hpd_short_pulse(dp)) {
+			phy_power_off(dp->phy);
 			return;
+		}
 
 		if (dp->compliance.test_active &&
 		    dp->compliance.test_type == DP_TEST_LINK_PHY_TEST_PATTERN) {
 			dw_dp_phy_test(dp);
 			/* just do the PHY test and nothing else */
+			phy_power_off(dp->phy);
 			return;
 		}
 
 		ret = dw_dp_link_retrain(dp);
 		if (ret)
 			dev_warn(dp->dev, "Retrain link failed\n");
+		phy_power_off(dp->phy);
 	} else {
 		drm_helper_hpd_irq_event(dp->bridge.dev);
 	}
