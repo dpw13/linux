@@ -23,6 +23,7 @@
 #include <linux/regulator/consumer.h>
 #include <linux/rk-camera-module.h>
 #include "common.h"
+#include "../../../i2c/cam-tb-setup.h"
 
 static inline struct sditf_priv *to_sditf_priv(struct v4l2_subdev *subdev)
 {
@@ -377,6 +378,79 @@ static void sditf_reinit_mode(struct sditf_priv *priv, struct rkisp_vicap_mode *
 		 __func__, mode->rdbk_mode, mode->name, priv->toisp_inf.link_mode);
 }
 
+#ifdef CONFIG_VIDEO_ROCKCHIP_THUNDER_BOOT_SETUP
+static void sditf_select_sensor_setting_for_thunderboot(struct sditf_priv *priv)
+{
+	struct rkcif_device *dev = priv->cif_dev;
+	struct v4l2_subdev_format fmt;
+	struct rk_sensor_setting sensor_setting = {0};
+	struct v4l2_subdev_frame_interval fi = {0};
+	struct rkmodule_hdr_cfg hdr_cfg;
+	int width = 0;
+	int height = 0;
+	int hdr_mode = 0;
+	int max_fps = 0;
+	int ret = 0;
+	bool is_match = false;
+
+	if (!dev->terminal_sensor.sd)
+		rkcif_update_sensor_info(&dev->stream[0]);
+	if (dev->terminal_sensor.sd) {
+		if (priv->mode.dev_id == 0) {
+			width = get_rk_cam_w();
+			height = get_rk_cam_h();
+			hdr_mode = get_rk_cam_hdr();
+			max_fps = get_rk_cam1_max_fps();
+		} else {
+			width = get_rk_cam2_w();
+			height = get_rk_cam2_h();
+			hdr_mode = get_rk_cam2_hdr();
+			max_fps = get_rk_cam2_max_fps();
+		}
+		fmt.pad = 0;
+		fmt.which = V4L2_SUBDEV_FORMAT_ACTIVE;
+		fmt.reserved[0] = 0;
+		fmt.format.field = V4L2_FIELD_NONE;
+		ret = v4l2_subdev_call(dev->terminal_sensor.sd, pad, get_fmt, NULL, &fmt);
+		if (!ret) {
+			if (dev->rdbk_debug)
+				v4l2_info(&dev->v4l2_dev,
+					  "cmdline get %dx%d@%dfps, hdr_mode %d\n",
+					  width, height, max_fps, hdr_mode);
+			sensor_setting.fmt = fmt.format.code;
+			sensor_setting.width = width;
+			sensor_setting.height = height;
+			sensor_setting.mode = hdr_mode;
+			sensor_setting.fps = max_fps;
+			ret = v4l2_subdev_call(dev->terminal_sensor.sd,
+			       core, ioctl,
+			       RKCIS_CMD_SELECT_SETTING,
+			       &sensor_setting);
+			if (!ret)
+				is_match = true;
+		}
+		if (!is_match) {
+			fmt.format.width = width;
+			fmt.format.height = height;
+			v4l2_subdev_call(dev->terminal_sensor.sd, pad, set_fmt, NULL, &fmt);
+			v4l2_subdev_call(dev->terminal_sensor.sd, video, g_frame_interval, &fi);
+			fi.interval.numerator = 1;
+			fi.interval.denominator = max_fps;
+			v4l2_subdev_call(dev->terminal_sensor.sd, video, s_frame_interval, &fi);
+			v4l2_subdev_call(dev->terminal_sensor.sd,
+					 core, ioctl,
+					 RKMODULE_GET_HDR_CFG,
+					 &hdr_cfg);
+			hdr_cfg.hdr_mode = hdr_mode;
+			v4l2_subdev_call(dev->terminal_sensor.sd,
+					 core, ioctl,
+					 RKMODULE_SET_HDR_CFG,
+					 &hdr_cfg);
+		}
+	}
+}
+#endif
+
 static void sditf_enable_immediately(struct sditf_priv *priv);
 static long sditf_ioctl(struct v4l2_subdev *sd, unsigned int cmd, void *arg)
 {
@@ -429,6 +503,10 @@ static long sditf_ioctl(struct v4l2_subdev *sd, unsigned int cmd, void *arg)
 			mode->input.multi_sync = 0;
 		else
 			mode->input.multi_sync = 1;
+#ifdef CONFIG_VIDEO_ROCKCHIP_THUNDER_BOOT_SETUP
+		if (cif_dev->is_thunderboot)
+			sditf_select_sensor_setting_for_thunderboot(priv);
+#endif
 		return 0;
 	case RKISP_VICAP_CMD_INIT_BUF:
 		pisp_buf_info = (struct rkisp_init_buf *)arg;
@@ -1175,7 +1253,6 @@ static int sditf_s_rx_buffer(struct v4l2_subdev *sd,
 {
 	struct sditf_priv *priv = to_sditf_priv(sd);
 	struct rkcif_device *cif_dev = priv->cif_dev;
-	struct rkcif_sensor_info *sensor = &cif_dev->terminal_sensor;
 	struct rkcif_stream *stream = NULL;
 	struct rkisp_rx_buf *dbufs;
 	struct rkcif_rx_buffer *rx_buf = NULL;
@@ -1315,13 +1392,13 @@ static int sditf_s_rx_buffer(struct v4l2_subdev *sd,
 			diff_time = 200000;
 		else
 			diff_time = 1000000;
-		if (dbufs->runtime_us * 1000 < cif_dev->sensor_linetime * sensor->raw_rect.height &&
+		if (dbufs->runtime_us * 1000 < cif_dev->sensor_linetime * stream->pixm.height &&
 		    dbufs->runtime_us * 1000 + cif_dev->sensor_linetime > diff_time)
 			early_time = dbufs->runtime_us * 1000 - diff_time;
 		else
 			early_time = diff_time;
 		cif_dev->early_line = div_u64(early_time, cif_dev->sensor_linetime);
-		cif_dev->wait_line_cache = sensor->raw_rect.height - cif_dev->early_line;
+		cif_dev->wait_line_cache = stream->pixm.height - cif_dev->early_line;
 		if (cif_dev->rdbk_debug &&
 		    dbufs->sequence < 15)
 			v4l2_info(&cif_dev->v4l2_dev,
@@ -1336,13 +1413,13 @@ static int sditf_s_rx_buffer(struct v4l2_subdev *sd,
 				diff_time = 200000;
 			else
 				diff_time = 1000000;
-			if (dbufs->runtime_us * 1000 < cif_dev->sensor_linetime * sensor->raw_rect.height &&
+			if (dbufs->runtime_us * 1000 < cif_dev->sensor_linetime * stream->pixm.height &&
 			    dbufs->runtime_us * 1000 + cif_dev->sensor_linetime > diff_time)
 				early_time = dbufs->runtime_us * 1000 - diff_time;
 			else
 				early_time = diff_time;
 			cif_dev->early_line = div_u64(early_time, cif_dev->sensor_linetime);
-			cif_dev->wait_line_cache = sensor->raw_rect.height - cif_dev->early_line;
+			cif_dev->wait_line_cache = stream->pixm.height - cif_dev->early_line;
 		}
 		if (cif_dev->rdbk_debug &&
 		    dbufs->sequence < 15)
