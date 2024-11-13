@@ -1079,6 +1079,10 @@ static __maybe_unused u32 hdmirxphy_read(struct rk628 *rk628, u32 offset)
 
 static void rk628_hdmirxphy_enable(struct rk628 *rk628, bool is_hdmi2, bool scramble_en)
 {
+	hdmirxphy_write(rk628, 0x3e, 0x0);
+	hdmirxphy_write(rk628, 0x5e, 0x0);
+	hdmirxphy_write(rk628, 0x7e, 0x0);
+
 	hdmirxphy_write(rk628, 0x02, 0x1860);
 	hdmirxphy_write(rk628, 0x03, 0x0060);
 	if (!is_hdmi2 && scramble_en)
@@ -1093,10 +1097,14 @@ static void rk628_hdmirxphy_enable(struct rk628 *rk628, bool is_hdmi2, bool scra
 	hdmirxphy_write(rk628, 0x2d, 0x008c);
 	hdmirxphy_write(rk628, 0x2e, 0x0001);
 
-	if (is_hdmi2)
+	if (is_hdmi2) {
 		hdmirxphy_write(rk628, 0x0e, 0x0108);
-	else
+		hdmirxphy_write(rk628, 0x3e, 0x610);
+		hdmirxphy_write(rk628, 0x5e, 0x610);
+		hdmirxphy_write(rk628, 0x7e, 0x610);
+	} else {
 		hdmirxphy_write(rk628, 0x0e, 0x0008);
+	}
 
 }
 
@@ -1118,8 +1126,10 @@ static int rk628_hdmirx_cec_log_addr(struct cec_adapter *adap, u8 logical_addr)
 	else
 		cec->addresses |= BIT(logical_addr) | BIT(15);
 
+	mutex_lock(&rk628->rst_lock);
 	rk628_i2c_write(rk628, HDMI_RX_CEC_ADDR_L, cec->addresses & 0xff);
 	rk628_i2c_write(rk628, HDMI_RX_CEC_ADDR_H, (cec->addresses >> 8) & 0xff);
+	mutex_unlock(&rk628->rst_lock);
 
 	return 0;
 }
@@ -1129,13 +1139,13 @@ static int rk628_hdmirx_cec_enable(struct cec_adapter *adap, bool enable)
 	struct rk628_hdmirx_cec *cec = cec_get_drvdata(adap);
 	struct rk628 *rk628 = cec->rk628;
 
+	mutex_lock(&rk628->rst_lock);
 	if (!enable) {
 		rk628_i2c_write(rk628, HDMI_RX_AUD_CEC_IEN_CLR, ~0);
 		rk628_i2c_update_bits(rk628, HDMI_RX_DMI_DISABLE_IF, CEC_ENABLE_MASK, 0);
 	} else {
 		unsigned int irqs;
 
-		rk628_hdmirx_cec_log_addr(cec->adap, CEC_LOG_ADDR_INVALID);
 		rk628_i2c_update_bits(rk628, HDMI_RX_DMI_DISABLE_IF, CEC_ENABLE_MASK,
 				      CEC_ENABLE_MASK);
 
@@ -1146,6 +1156,7 @@ static int rk628_hdmirx_cec_enable(struct cec_adapter *adap, bool enable)
 		irqs = ERROR_INIT_ENSET | NACK_ENSET | EOM_ENSET | DONE_ENSET;
 		rk628_i2c_write(rk628, HDMI_RX_AUD_CEC_IEN_SET, irqs);
 	}
+	mutex_unlock(&rk628->rst_lock);
 
 	return 0;
 }
@@ -1177,11 +1188,13 @@ static int rk628_hdmirx_cec_transmit(struct cec_adapter *adap, u8 attempts,
 	if (msg_len <= 0)
 		return 0;
 
+	mutex_lock(&rk628->rst_lock);
 	for (i = 0; i < msg_len; i++)
 		rk628_i2c_write(rk628, HDMI_RX_CEC_TX_DATA_0 + i * 4, msg->msg[i]);
 
 	rk628_i2c_write(rk628, HDMI_RX_CEC_TX_CNT, msg_len);
 	rk628_i2c_write(rk628, HDMI_RX_CEC_CTRL, ctrl | CEC_SEND);
+	mutex_unlock(&rk628->rst_lock);
 
 	return 0;
 }
@@ -1879,6 +1892,24 @@ bool rk628_hdmirx_scdc_ced_err(struct rk628 *rk628)
 	return true;
 }
 EXPORT_SYMBOL(rk628_hdmirx_scdc_ced_err);
+
+bool rk628_hdmirx_is_locked(struct rk628 *rk628)
+{
+	u32 val;
+
+	rk628_i2c_read(rk628, HDMI_RX_SCDC_REGS1, &val);
+	if (!(val & 0x100))
+		return false;
+	if (!(val & 0x200))
+		return false;
+	if (!(val & 0x400))
+		return false;
+	if (!(val & 0x800))
+		return false;
+
+	return true;
+}
+EXPORT_SYMBOL(rk628_hdmirx_is_locked);
 
 bool rk628_hdmirx_is_signal_change_ists(struct rk628 *rk628, u32 md_ints, u32 pdec_ints)
 {
