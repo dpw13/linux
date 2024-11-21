@@ -11,6 +11,8 @@
 #include <linux/regulator/machine.h>
 #include <linux/regulator/of_regulator.h>
 #include <linux/regmap.h>
+#include <linux/slab.h>
+#include <linux/version.h>
 #include "sy7636a.h"
 
 #define SY7636A_MAX_ENABLE_GPIO_NUM 4
@@ -100,6 +102,7 @@ static int sy7636a_get_status(struct regulator_dev *rdev)
 	return 0;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0)
 static int sy7636a_set_suspend_disable(struct regulator_dev *rdev)
 {
 	DECLARE_BITMAP(values, SY7636A_MAX_ENABLE_GPIO_NUM);
@@ -129,7 +132,41 @@ static int sy7636a_set_suspend_disable(struct regulator_dev *rdev)
 
 	return 0;
 }
+#else
+static int sy7636a_set_suspend_disable(struct regulator_dev *rdev)
+{
+	struct sy7636a_data *data = rdev->reg_data;
+	int ret;
 
+	/* Skip initial suspend */
+	if (data->initial_suspend) {
+		data->initial_suspend = false;
+		return 0;
+	}
+
+	ret = regmap_write_bits(rdev->regmap, SY7636A_REG_OPERATION_MODE_CRL,
+				SY7636A_OPERATION_MODE_CRL_VCOMCTL, 0);
+	if (ret)
+		return ret;
+
+	if (data->enable_gpio) {
+		int i;
+		int nvalues = data->enable_gpio->ndescs;
+		int *values = kmalloc_array(nvalues, sizeof(int), GFP_KERNEL);
+		if (!values)
+			return -ENOMEM;
+		for (i = 0; i < nvalues; i++)
+			values[i] = 0;
+		gpiod_set_array_value_cansleep(data->enable_gpio->ndescs,
+						     data->enable_gpio->desc, values);
+		kfree(values);
+	}
+
+	return 0;
+}
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0)
 static int sy7636a_resume(struct regulator_dev *rdev)
 {
 	DECLARE_BITMAP(values, SY7636A_MAX_ENABLE_GPIO_NUM);
@@ -171,6 +208,51 @@ static int sy7636a_resume(struct regulator_dev *rdev)
 
 	return 0;
 }
+#else
+static int sy7636a_resume(struct regulator_dev *rdev)
+{
+	struct sy7636a_data *data = rdev->reg_data;
+	int ret, val;
+
+	if (data->enable_gpio) {
+		int i;
+		int nvalues = data->enable_gpio->ndescs;
+		int *values = kmalloc_array(nvalues, sizeof(int), GFP_KERNEL);
+		if (!values)
+			return -ENOMEM;
+		for (i = 0; i < nvalues; i++)
+			values[i] = 1;
+		gpiod_set_array_value_cansleep(data->enable_gpio->ndescs,
+						     data->enable_gpio->desc, values);
+		kfree(values);
+	}
+
+	/* After enable, sy7636a needs 2.5ms to enter active mode from sleep mode. */
+	usleep_range(2500, 2600);
+
+	/* VCOM setting resume */
+	val = data->vcom_uV / VCOM_ADJUST_CTRL_SCAL;
+
+	ret = regmap_write(rdev->regmap, SY7636A_REG_VCOM_ADJUST_CTRL_L, val & 0xFF);
+	if (ret)
+		return ret;
+
+	ret = regmap_write(rdev->regmap, SY7636A_REG_VCOM_ADJUST_CTRL_H, (val >> 1) & 0x80);
+	if (ret)
+		return ret;
+
+	ret = regmap_write(rdev->regmap, SY7636A_REG_POWER_ON_DELAY_TIME, 0x0);
+	if (ret)
+		return ret;
+
+	ret = regmap_write_bits(rdev->regmap, SY7636A_REG_OPERATION_MODE_CRL,
+				SY7636A_OPERATION_MODE_CRL_VCOMCTL, 1);
+	if (ret)
+		return ret;
+
+	return 0;
+}
+#endif
 
 static const struct regulator_ops sy7636a_vcom_volt_ops = {
 	.set_voltage = sy7636a_set_vcom_voltage_op,
@@ -257,10 +339,11 @@ static int sy7636a_regulator_probe(struct platform_device *pdev)
 			ret = devm_request_threaded_irq(pdev->dev.parent, data->pgood_irq, NULL,
 							sy7636a_power_good_irq_handler,
 							IRQF_TRIGGER_FALLING |
-							IRQF_ONESHOT |
-							IRQF_NO_AUTOEN, "sy7636a", data);
+							IRQF_ONESHOT,
+							"sy7636a", data);
 			if (ret)
 				dev_err(pdev->dev.parent, "Failed to request sy7636a irq\n");
+			disable_irq(data->pgood_irq);
 		}
 	}
 
