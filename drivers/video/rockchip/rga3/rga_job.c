@@ -270,6 +270,7 @@ struct rga_job *rga_job_done(struct rga_scheduler_t *scheduler)
 
 static int rga_job_timeout_query_state(struct rga_job *job, int orig_ret)
 {
+	int ret = orig_ret;
 	struct rga_scheduler_t *scheduler = job->scheduler;
 
 	if (test_bit(RGA_JOB_STATE_DONE, &job->state) &&
@@ -279,7 +280,7 @@ static int rga_job_timeout_query_state(struct rga_job *job, int orig_ret)
 		   test_bit(RGA_JOB_STATE_FINISH, &job->state)) {
 		rga_job_err(job, "job hardware has finished, but the software has timeout!\n");
 
-		return -EBUSY;
+		ret = -EBUSY;
 	} else if (!test_bit(RGA_JOB_STATE_DONE, &job->state) &&
 		   !test_bit(RGA_JOB_STATE_FINISH, &job->state)) {
 		rga_job_err(job, "job hardware has timeout.\n");
@@ -287,7 +288,7 @@ static int rga_job_timeout_query_state(struct rga_job *job, int orig_ret)
 		if (scheduler->ops->read_status)
 			scheduler->ops->read_status(job, scheduler);
 
-		return -EBUSY;
+		ret = -EBUSY;
 	}
 
 	rga_job_err(job, "timeout core[%d]: INTR[0x%x], HW_STATUS[0x%x], CMD_STATUS[0x%x], WORK_CYCLE[0x%x(%d)]\n",
@@ -295,7 +296,7 @@ static int rga_job_timeout_query_state(struct rga_job *job, int orig_ret)
 		    job->intr_status, job->hw_status, job->cmd_status,
 		    job->work_cycle, job->work_cycle);
 
-	return orig_ret;
+	return ret;
 }
 
 static void rga_job_scheduler_timeout_clean(struct rga_scheduler_t *scheduler)
@@ -1253,9 +1254,9 @@ int rga_request_submit(struct rga_request *request)
 
 	if (request->sync_mode == RGA_BLIT_ASYNC) {
 		release_fence = rga_dma_fence_alloc();
-		if (IS_ERR(release_fence)) {
+		if (IS_ERR_OR_NULL(release_fence)) {
 			rga_req_err(request, "Can not alloc release fence!\n");
-			ret = IS_ERR(release_fence);
+			ret = IS_ERR(release_fence) ? PTR_ERR(release_fence) : -EINVAL;
 			goto err_reset_request;
 		}
 		request->release_fence = release_fence;
