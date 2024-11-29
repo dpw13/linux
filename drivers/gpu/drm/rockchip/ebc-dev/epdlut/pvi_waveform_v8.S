@@ -52,12 +52,12 @@ pvi_wf_get_lut:
 	b.ne	.LBB0_6
 	ldr	w9, [x28, :lo12:pvi_wf_get_lut.fix]
 	cmp	w9, w21
-	b.eq	.LBB0_66
+	b.eq	.LBB0_67
 .LBB0_6:
 	adrp	x11, need_pic
 	subs	w9, w22, #10
 	str	w3, [x11, :lo12:need_pic]
-	b.eq	.LBB0_65
+	b.eq	.LBB0_66
 	ldr	x11, [x20, #16]
 	adrp	x12, waveformdata
 	ldrb	w10, [x8, #38]
@@ -77,10 +77,10 @@ pvi_wf_get_lut:
 	b	.LBB0_16
 .LBB0_12:
 	mov	w0, #-19
-	b	.LBB0_92
+	b	.LBB0_93
 .LBB0_13:
 	mov	w0, #-22
-	b	.LBB0_92
+	b	.LBB0_93
 .LBB0_14:
 	mov	w11, wzr
 	mov	w12, #-1
@@ -92,7 +92,7 @@ pvi_wf_get_lut:
 	cmp	w11, w10
 	csel	w23, w13, w12, eq
 	cmp	w22, #15
-	b.hs	.LBB0_96
+	b.hs	.LBB0_50
 	cmp	w9, #5
 	b.hs	.LBB0_19
 	adrp	x10, .Lswitch.table.pvi_wf_get_lut.7
@@ -152,12 +152,12 @@ pvi_wf_get_lut:
 .LBB0_32:
 	mov	w1, w23
 	bl	get_wf_frm_num
-	tbnz	w0, #31, .LBB0_93
+	tbnz	w0, #31, .LBB0_94
 	mov	w23, w0
 	cmp	w22, #1
 	b.eq	.LBB0_39
 	cmp	w22, #7
-	b.ne	.LBB0_42
+	b.ne	.LBB0_40
 	ldr	x8, [x20, #16]
 	cbz	w23, .LBB0_38
 	mov	w10, w23
@@ -169,109 +169,130 @@ pvi_wf_get_lut:
 	cmp	x10, x9
 	ldrb	w12, [x11, #960]
 	ldrb	w13, [x11, #30]
-	strb	w12, [x11, #928]
 	strb	w12, [x11]
 	strb	w13, [x11, #990]
 	b.ne	.LBB0_37
 .LBB0_38:
-	mov	w9, #1
-	mov	w10, #2
-	b	.LBB0_63
+	lsl	w9, w23, #10
+	mov	w11, #1
+	sub	w10, w9, #1, lsl #12
+	sub	w12, w9, #3072
+	sub	w9, w9, #2048
+	mov	w13, #2
+	add	x10, x8, w10, sxtw
+	add	x12, x8, w12, sxtw
+	add	x8, x8, w9, sxtw
+	strb	w11, [x10, #958]
+	strb	w13, [x12, #958]
+	strb	w13, [x8, #958]
+	b	.LBB0_65
 .LBB0_39:
-	ldr	x9, [x20, #16]
-	add	x8, x9, #1, lsl #12
-	cbz	w23, .LBB0_62
-	mov	w10, w23
-	cmp	w23, #1
-	b.ne	.LBB0_50
-	mov	x11, xzr
-	b	.LBB0_60
-.LBB0_42:
-	sub	w8, w22, #5
-	cmp	w8, #1
-	b.hi	.LBB0_46
-	cbz	w23, .LBB0_64
 	ldr	x8, [x20, #16]
-	mov	w9, w23
-	cmp	w23, #1
-	b.ne	.LBB0_98
-	mov	x10, xzr
-	b	.LBB0_110
-.LBB0_46:
-	sub	w8, w22, #11
-	cmp	w8, #1
-	b.hi	.LBB0_94
-	cbz	w23, .LBB0_64
-	ldr	x8, [x20, #16]
-	mov	w9, w23
-	cmp	w23, #1
-	b.ne	.LBB0_112
-	mov	x10, xzr
-	b	.LBB0_132
-.LBB0_50:
-	sub	x13, x10, #1
-	mov	x11, xzr
-	and	x12, x13, #0xffffffff
-	lsl	x15, x12, #10
-	tst	x15, #0xffffffff00000000
-	cset	w14, ne
-	cmp	xzr, x13, lsr #54
-	cset	w12, ne
-	tbnz	w15, #31, .LBB0_60
-	tbnz	w14, #0, .LBB0_60
-	lsr	x14, x13, #32
-	cbnz	x14, .LBB0_60
-	add	x14, x9, #960
-	lsl	x13, x13, #10
-	add	x15, x14, x13
-	cmp	x15, x14
-	b.lo	.LBB0_60
-	tbnz	w12, #0, .LBB0_60
-	add	x14, x9, #928
-	add	x13, x14, x13
-	cmp	x13, x14
-	b.lo	.LBB0_60
-	tbnz	w12, #0, .LBB0_60
-	and	x11, x10, #0xfffffffe
-	mov	w12, #1024
-	mov	x13, x11
-.LBB0_58:
-	sub	w14, w12, #1024
-	add	x15, x9, w12, sxtw
-	subs	x13, x13, #2
-	add	w12, w12, #2048
-	add	x14, x9, w14, sxtw
-	ldrb	w17, [x15, #960]
-	ldrb	w16, [x14, #960]
-	strb	w17, [x15, #928]
-	strb	w16, [x14, #928]
-	b.ne	.LBB0_58
-	cmp	x11, x10
-	b.eq	.LBB0_62
-.LBB0_60:
-	sub	x10, x10, x11
-	lsl	w11, w11, #10
-.LBB0_61:
-	add	x12, x9, w11, sxtw
-	subs	x10, x10, #1
-	add	w11, w11, #1024
-	ldrb	w13, [x12, #960]
-	strb	w13, [x12, #928]
-	b.ne	.LBB0_61
-.LBB0_62:
 	mov	w9, #1
 	mov	w10, #2
 	strb	w9, [x8]
-	strb	w10, [x8, #990]
 	strb	w9, [x8, #1024]
-	strb	w10, [x8, #2014]
 	strb	w9, [x8, #2048]
-	strb	w10, [x8, #3038]
-.LBB0_63:
 	strb	w9, [x8, #958]
 	strb	w10, [x8, #1982]
 	strb	w10, [x8, #3006]
+	b	.LBB0_65
+.LBB0_40:
+	sub	w8, w22, #5
+	cmp	w8, #1
+	b.hi	.LBB0_44
+	cbz	w23, .LBB0_65
+	ldr	x8, [x20, #16]
+	mov	w9, w23
+	cmp	w23, #1
+	b.ne	.LBB0_51
+	mov	x10, xzr
+	b	.LBB0_63
+.LBB0_44:
+	sub	w8, w22, #11
+	cmp	w8, #1
+	b.hi	.LBB0_48
+	cbz	w23, .LBB0_65
+	ldr	x8, [x20, #16]
+	mov	w9, w23
+	cmp	w23, #1
+	b.ne	.LBB0_96
+	mov	x10, xzr
+	b	.LBB0_116
+.LBB0_48:
+	sub	w8, w22, #13
+	cmp	w8, #1
+	b.hi	.LBB0_65
+	ldr	x0, [x20, #16]
+	mov	w1, w23
+	mov	w2, w21
+	bl	pvi_wf_normal_fix
+	b	.LBB0_65
+.LBB0_50:
+	adrp	x0, .L.str.3
+	add	x0, x0, :lo12:.L.str.3
+	bl	_printk
+	mov	w0, #255
+	b	.LBB0_32
+.LBB0_51:
+	sub	x12, x9, #1
+	mov	x10, xzr
+	and	x11, x12, #0xffffffff
+	lsl	x14, x11, #10
+	tst	x14, #0xffffffff00000000
+	cset	w13, ne
+	cmp	xzr, x12, lsr #54
+	cset	w11, ne
+	tbnz	w14, #31, .LBB0_63
+	tbnz	w13, #0, .LBB0_63
+	lsr	x13, x12, #32
+	cbnz	x13, .LBB0_63
+	add	x13, x8, #30
+	lsl	x12, x12, #10
+	add	x14, x13, x12
+	cmp	x14, x13
+	b.lo	.LBB0_63
+	tbnz	w11, #0, .LBB0_63
+	add	x13, x8, #29
+	add	x14, x13, x12
+	cmp	x14, x13
+	b.lo	.LBB0_63
+	tbnz	w11, #0, .LBB0_63
+	add	x13, x8, #31
+	add	x12, x13, x12
+	cmp	x12, x13
+	b.lo	.LBB0_63
+	tbnz	w11, #0, .LBB0_63
+	and	x10, x9, #0xfffffffe
+	mov	w11, #1024
+	mov	x12, x10
+.LBB0_61:
+	sub	w13, w11, #1024
+	add	x14, x8, w11, sxtw
+	subs	x12, x12, #2
+	add	w11, w11, #2048
+	add	x13, x8, w13, sxtw
+	ldrb	w15, [x14, #30]
+	ldrb	w16, [x13, #30]
+	strb	w15, [x14, #31]
+	strb	w15, [x14, #29]
+	strb	w16, [x13, #31]
+	strb	w16, [x13, #29]
+	b.ne	.LBB0_61
+	cmp	x10, x9
+	b.eq	.LBB0_65
+.LBB0_63:
+	sub	x9, x9, x10
+	lsl	w10, w10, #10
 .LBB0_64:
+	add	x11, x8, w10, sxtw
+	subs	x9, x9, #1
+	add	w10, w10, #1024
+	ldrb	w12, [x11, #30]
+	strb	w12, [x11, #31]
+	strb	w12, [x11, #29]
+	b.ne	.LBB0_64
+.LBB0_65:
 	ldrb	w8, [x20, #1]
 	mov	w9, #21846
 	movk	w9, #21845, lsl #16
@@ -284,111 +305,111 @@ pvi_wf_get_lut:
 	lsr	x9, x8, #63
 	lsr	x8, x8, #32
 	add	w10, w8, w9
-.LBB0_65:
-	cmp	w26, w10
-	b.ne	.LBB0_67
 .LBB0_66:
-	mov	w0, wzr
-	b	.LBB0_92
+	cmp	w26, w10
+	b.ne	.LBB0_68
 .LBB0_67:
+	mov	w0, wzr
+	b	.LBB0_93
+.LBB0_68:
 	ldr	x8, [x20, #24]
 	adrp	x9, waveformdata
 	str	x8, [x9, :lo12:waveformdata]
 	bl	epd_overlay_lut
 	ldr	x8, [x25, :lo12:global_waveform]
 	ldrb	w9, [x8, #38]
-	cbz	w9, .LBB0_72
+	cbz	w9, .LBB0_73
 	mov	x10, xzr
 	add	x11, x8, #48
-.LBB0_69:
+.LBB0_70:
 	ldrb	w12, [x11, x10]
 	cmp	w12, w19
-	b.ge	.LBB0_73
+	b.ge	.LBB0_74
 	add	x10, x10, #1
 	cmp	x9, x10
-	b.ne	.LBB0_69
+	b.ne	.LBB0_70
 	mov	w11, #-1
 	mov	w10, w9
-	b	.LBB0_74
-.LBB0_72:
+	b	.LBB0_75
+.LBB0_73:
 	mov	w10, wzr
 	mov	w11, #-1
-	b	.LBB0_74
-.LBB0_73:
-	mov	w11, w10
+	b	.LBB0_75
 .LBB0_74:
+	mov	w11, w10
+.LBB0_75:
 	sub	w12, w10, #1
 	cmp	w10, w9
 	csel	w21, w12, w11, eq
 	cmp	w0, #15
-	b.hs	.LBB0_97
+	b.hs	.LBB0_95
 	sub	w9, w0, #10
 	cmp	w9, #5
-	b.hs	.LBB0_77
+	b.hs	.LBB0_78
 	adrp	x10, .Lswitch.table.pvi_wf_get_lut.7
 	add	x10, x10, :lo12:.Lswitch.table.pvi_wf_get_lut.7
 	ldr	x9, [x10, w9, sxtw #3]
-	b	.LBB0_78
-.LBB0_77:
-	mov	w9, w0
+	b	.LBB0_79
 .LBB0_78:
+	mov	w9, w0
+.LBB0_79:
 	ldrb	w10, [x8, #16]
 	sub	w8, w10, #9
 	cmp	w8, #75
-	b.hi	.LBB0_81
+	b.hi	.LBB0_82
 	adrp	x10, .LJTI0_1
 	add	x10, x10, :lo12:.LJTI0_1
-	adr	x11, .LBB0_80
+	adr	x11, .LBB0_81
 	ldrb	w12, [x10, x8]
 	add	x11, x11, x12, lsl #2
 	adrp	x8, pvi_mode_table
 	add	x8, x8, :lo12:pvi_mode_table
 	br	x11
-.LBB0_80:
+.LBB0_81:
 	adrp	x8, pvi_mode_table+30
 	add	x8, x8, :lo12:pvi_mode_table+30
-	b	.LBB0_89
-.LBB0_81:
+	b	.LBB0_90
+.LBB0_82:
 	cmp	w10, #114
-	b.ne	.LBB0_83
+	b.ne	.LBB0_84
 	adrp	x8, pvi_mode_table+70
 	add	x8, x8, :lo12:pvi_mode_table+70
-	b	.LBB0_89
-.LBB0_83:
+	b	.LBB0_90
+.LBB0_84:
 	adrp	x8, pvi_mode_table+80
 	add	x8, x8, :lo12:pvi_mode_table+80
-	b	.LBB0_89
-.LBB0_84:
+	b	.LBB0_90
+.LBB0_85:
 	adrp	x8, pvi_mode_table+10
 	add	x8, x8, :lo12:pvi_mode_table+10
-	b	.LBB0_89
-.LBB0_85:
+	b	.LBB0_90
+.LBB0_86:
 	adrp	x8, pvi_mode_table+20
 	add	x8, x8, :lo12:pvi_mode_table+20
-	b	.LBB0_89
-.LBB0_86:
+	b	.LBB0_90
+.LBB0_87:
 	adrp	x8, pvi_mode_table+40
 	add	x8, x8, :lo12:pvi_mode_table+40
-	b	.LBB0_89
-.LBB0_87:
+	b	.LBB0_90
+.LBB0_88:
 	adrp	x8, pvi_mode_table+50
 	add	x8, x8, :lo12:pvi_mode_table+50
-	b	.LBB0_89
-.LBB0_88:
+	b	.LBB0_90
+.LBB0_89:
 	adrp	x8, pvi_mode_table+60
 	add	x8, x8, :lo12:pvi_mode_table+60
-.LBB0_89:
-	ldrb	w0, [x8, x9]
 .LBB0_90:
+	ldrb	w0, [x8, x9]
+.LBB0_91:
 	mov	w1, w21
 	bl	get_wf_frm_num
-	tbnz	w0, #31, .LBB0_93
+	tbnz	w0, #31, .LBB0_94
 	ldrb	w8, [x20]
 	bfi	w8, w0, #8, #24
 	mov	w0, wzr
 	str	w8, [x20]
 	str	w19, [x24, :lo12:pvi_wf_get_lut.sftemp]
-.LBB0_92:
+.LBB0_93:
 	ldp	x20, x19, [sp, #80]
 	ldp	x22, x21, [sp, #64]
 	ldp	x24, x23, [sp, #48]
@@ -397,34 +418,19 @@ pvi_wf_get_lut:
 	ldp	x29, x30, [sp], #96
 	ldr	x30, [x18, #-8]!
 	ret
-.LBB0_93:
+.LBB0_94:
 	adrp	x0, .L.str
 	add	x0, x0, :lo12:.L.str
 	bl	_printk
 	mov	w0, #-5
-	b	.LBB0_92
-.LBB0_94:
-	sub	w8, w22, #13
-	cmp	w8, #1
-	b.hi	.LBB0_64
-	ldr	x0, [x20, #16]
-	mov	w1, w23
-	mov	w2, w21
-	bl	pvi_wf_normal_fix
-	b	.LBB0_64
+	b	.LBB0_93
+.LBB0_95:
+	adrp	x0, .L.str.3
+	add	x0, x0, :lo12:.L.str.3
+	bl	_printk
+	mov	w0, #255
+	b	.LBB0_91
 .LBB0_96:
-	adrp	x0, .L.str.3
-	add	x0, x0, :lo12:.L.str.3
-	bl	_printk
-	mov	w0, #255
-	b	.LBB0_32
-.LBB0_97:
-	adrp	x0, .L.str.3
-	add	x0, x0, :lo12:.L.str.3
-	bl	_printk
-	mov	w0, #255
-	b	.LBB0_90
-.LBB0_98:
 	sub	x12, x9, #1
 	mov	x10, xzr
 	and	x11, x12, #0xffffffff
@@ -433,109 +439,50 @@ pvi_wf_get_lut:
 	cset	w13, ne
 	cmp	xzr, x12, lsr #54
 	cset	w11, ne
-	tbnz	w14, #31, .LBB0_110
-	tbnz	w13, #0, .LBB0_110
+	tbnz	w14, #31, .LBB0_116
+	tbnz	w13, #0, .LBB0_116
 	lsr	x13, x12, #32
-	cbnz	x13, .LBB0_110
+	cbnz	x13, .LBB0_116
 	add	x13, x8, #30
 	lsl	x12, x12, #10
 	add	x14, x13, x12
 	cmp	x14, x13
-	b.lo	.LBB0_110
-	tbnz	w11, #0, .LBB0_110
-	add	x13, x8, #29
-	add	x14, x13, x12
-	cmp	x14, x13
-	b.lo	.LBB0_110
-	tbnz	w11, #0, .LBB0_110
-	add	x13, x8, #31
-	add	x12, x13, x12
-	cmp	x12, x13
-	b.lo	.LBB0_110
-	tbnz	w11, #0, .LBB0_110
-	and	x10, x9, #0xfffffffe
-	mov	w11, #1024
-	mov	x12, x10
-.LBB0_108:
-	sub	w13, w11, #1024
-	add	x14, x8, w11, sxtw
-	subs	x12, x12, #2
-	add	w11, w11, #2048
-	add	x13, x8, w13, sxtw
-	ldrb	w15, [x14, #30]
-	ldrb	w16, [x13, #30]
-	strb	w15, [x14, #31]
-	strb	w15, [x14, #29]
-	strb	w16, [x13, #31]
-	strb	w16, [x13, #29]
-	b.ne	.LBB0_108
-	cmp	x10, x9
-	b.eq	.LBB0_64
-.LBB0_110:
-	sub	x9, x9, x10
-	lsl	w10, w10, #10
-.LBB0_111:
-	add	x11, x8, w10, sxtw
-	subs	x9, x9, #1
-	add	w10, w10, #1024
-	ldrb	w12, [x11, #30]
-	strb	w12, [x11, #31]
-	strb	w12, [x11, #29]
-	b.ne	.LBB0_111
-	b	.LBB0_64
-.LBB0_112:
-	sub	x12, x9, #1
-	mov	x10, xzr
-	and	x11, x12, #0xffffffff
-	lsl	x14, x11, #10
-	tst	x14, #0xffffffff00000000
-	cset	w13, ne
-	cmp	xzr, x12, lsr #54
-	cset	w11, ne
-	tbnz	w14, #31, .LBB0_132
-	tbnz	w13, #0, .LBB0_132
-	lsr	x13, x12, #32
-	cbnz	x13, .LBB0_132
-	add	x13, x8, #30
-	lsl	x12, x12, #10
-	add	x14, x13, x12
-	cmp	x14, x13
-	b.lo	.LBB0_132
-	tbnz	w11, #0, .LBB0_132
+	b.lo	.LBB0_116
+	tbnz	w11, #0, .LBB0_116
 	add	x13, x8, #1022
 	add	x14, x13, x12
 	cmp	x14, x13
-	b.lo	.LBB0_132
-	tbnz	w11, #0, .LBB0_132
+	b.lo	.LBB0_116
+	tbnz	w11, #0, .LBB0_116
 	add	x13, x8, #1021
 	add	x14, x13, x12
 	cmp	x14, x13
-	b.lo	.LBB0_132
-	tbnz	w11, #0, .LBB0_132
+	b.lo	.LBB0_116
+	tbnz	w11, #0, .LBB0_116
 	add	x13, x8, #29
 	add	x14, x13, x12
 	cmp	x14, x13
-	b.lo	.LBB0_132
-	tbnz	w11, #0, .LBB0_132
+	b.lo	.LBB0_116
+	tbnz	w11, #0, .LBB0_116
 	add	x13, x8, #31
 	add	x14, x13, x12
 	cmp	x14, x13
-	b.lo	.LBB0_132
-	tbnz	w11, #0, .LBB0_132
+	b.lo	.LBB0_116
+	tbnz	w11, #0, .LBB0_116
 	add	x13, x8, #989
 	add	x12, x13, x12
 	cmp	x12, x13
-	b.lo	.LBB0_132
-	tbnz	w11, #0, .LBB0_132
+	b.lo	.LBB0_116
+	tbnz	w11, #0, .LBB0_116
 	and	x10, x9, #0xfffffffe
 	mov	w11, #1024
 	mov	x12, x10
-	b	.LBB0_129
-.LBB0_128:
+	b	.LBB0_113
+.LBB0_112:
 	subs	x12, x12, #2
 	add	w11, w11, #2048
-	b.eq	.LBB0_131
-.LBB0_129:
+	b.eq	.LBB0_115
+.LBB0_113:
 	sub	w14, w11, #1024
 	add	x13, x8, w11, sxtw
 	add	x14, x8, w14, sxtw
@@ -547,33 +494,33 @@ pvi_wf_get_lut:
 	strb	w15, [x13, #29]
 	strb	w16, [x14, #31]
 	strb	w16, [x14, #29]
-	cbz	w21, .LBB0_128
+	cbz	w21, .LBB0_112
 	add	x14, x14, #1021
 	add	x13, x13, #1021
 	strh	wzr, [x14]
 	strh	wzr, [x13]
-	b	.LBB0_128
-.LBB0_131:
+	b	.LBB0_112
+.LBB0_115:
 	cmp	x10, x9
-	b.eq	.LBB0_64
-.LBB0_132:
+	b.eq	.LBB0_65
+.LBB0_116:
 	sub	x9, x9, x10
 	lsl	w10, w10, #10
-	b	.LBB0_134
-.LBB0_133:
+	b	.LBB0_118
+.LBB0_117:
 	subs	x9, x9, #1
 	add	w10, w10, #1024
-	b.eq	.LBB0_64
-.LBB0_134:
+	b.eq	.LBB0_65
+.LBB0_118:
 	add	x11, x8, w10, sxtw
 	ldrb	w12, [x11, #30]
 	strb	wzr, [x11, #989]
 	strb	w12, [x11, #31]
 	strb	w12, [x11, #29]
-	cbz	w21, .LBB0_133
+	cbz	w21, .LBB0_117
 	add	x11, x11, #1021
 	strh	wzr, [x11]
-	b	.LBB0_133
+	b	.LBB0_117
 .Lfunc_end0:
 	.size	pvi_wf_get_lut, .Lfunc_end0-pvi_wf_get_lut
 	.section	.rodata,"a",@progbits
@@ -655,82 +602,82 @@ pvi_wf_get_lut:
 	.byte	(.LBB0_25-.LBB0_22)>>2
 	.byte	(.LBB0_30-.LBB0_22)>>2
 .LJTI0_1:
-	.byte	(.LBB0_89-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_84-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_85-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_80-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_86-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_80-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_87-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_83-.LBB0_80)>>2
-	.byte	(.LBB0_88-.LBB0_80)>>2
+	.byte	(.LBB0_90-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_85-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_86-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_81-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_87-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_81-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_88-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_84-.LBB0_81)>>2
+	.byte	(.LBB0_89-.LBB0_81)>>2
 
 	.text
 	.p2align	2
