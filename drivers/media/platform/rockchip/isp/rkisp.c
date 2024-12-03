@@ -558,6 +558,7 @@ static void rkisp_dvfs(struct rkisp_device *dev)
 static void rkisp_multi_overflow_hdl(struct rkisp_device *dev, bool on)
 {
 	struct rkisp_hw_dev *hw = dev->hw_dev;
+	u32 val;
 
 	if (on) {
 		/* enable mi */
@@ -571,6 +572,9 @@ static void rkisp_multi_overflow_hdl(struct rkisp_device *dev, bool on)
 			rkisp_update_regs(dev, ISP3X_MI_BP_WR_CTRL, ISP3X_MI_BP_WR_CTRL);
 			rkisp_update_regs(dev, ISP32_MI_BPDS_WR_CTRL, ISP32_MI_BPDS_WR_CTRL);
 			rkisp_update_regs(dev, ISP32_MI_MPDS_WR_CTRL, ISP32_MI_MPDS_WR_CTRL);
+			/* restore bay3d iir_wr and ds_wr */
+			rkisp_update_regs(dev, ISP3X_MI_BAY3D_IIR_WR_BASE, ISP3X_MI_BAY3D_IIR_WR_SIZE);
+			rkisp_update_regs(dev, ISP3X_MI_BAY3D_DS_WR_BASE, ISP3X_MI_BAY3D_DS_WR_SIZE);
 		}
 	} else {
 		/* disabled mi. rv1106 sdmmc workaround, 3a_wr no close */
@@ -590,6 +594,14 @@ static void rkisp_multi_overflow_hdl(struct rkisp_device *dev, bool on)
 			writel(0, hw->base_addr + ISP3X_MI_BP_WR_CTRL);
 			writel(0, hw->base_addr + ISP32_MI_BPDS_WR_CTRL);
 			writel(0, hw->base_addr + ISP32_MI_MPDS_WR_CTRL);
+			/* drop bay3d iir_wr and ds_wr data */
+			writel(4096, hw->base_addr + ISP3X_MI_BAY3D_IIR_WR_SIZE);
+			writel(4096, hw->base_addr + ISP3X_MI_BAY3D_DS_WR_SIZE);
+			val = readl(hw->base_addr +  ISP3X_MI_3A_WR_BASE);
+			if (val) {
+				writel(val, hw->base_addr + ISP3X_MI_BAY3D_IIR_WR_BASE);
+				writel(val, hw->base_addr + ISP3X_MI_BAY3D_DS_WR_BASE);
+			}
 		}
 	}
 	rkisp_unite_write(dev, ISP3X_MI_WR_INIT, CIF_MI_INIT_SOFT_UPD, true);
@@ -1020,7 +1032,7 @@ static void rkisp_rdbk_trigger_handle(struct rkisp_device *dev, u32 cmd)
 			isp = dev;
 			is_try = true;
 			times = 0;
-			if (hw->unite == ISP_UNITE_ONE) {
+			if (hw->unite == ISP_UNITE_ONE && isp->unite_div > ISP_UNITE_DIV1) {
 				if (hw->is_multi_overflow && dev->sw_rd_cnt < 2)
 					isp->unite_index = ISP_UNITE_RIGHT;
 				else if (!hw->is_multi_overflow)
@@ -1103,8 +1115,8 @@ static void rkisp_rdbk_trigger_handle(struct rkisp_device *dev, u32 cmd)
 			/* frame double for multi camera resolution out of hardware limit
 			 * first for HW save this camera information, and second to output image
 			 */
-			if ((hw->unite == ISP_UNITE_ONE ||
-			    (hw->pre_dev_id != -1 && hw->pre_dev_id != id))) {
+			if ((hw->unite == ISP_UNITE_ONE && isp->unite_div > ISP_UNITE_DIV1) ||
+			    (hw->pre_dev_id != -1 && hw->pre_dev_id != id)) {
 				isp->is_frame_double = true;
 				isp->sw_rd_cnt = 1;
 				times = 0;
@@ -1112,11 +1124,11 @@ static void rkisp_rdbk_trigger_handle(struct rkisp_device *dev, u32 cmd)
 			/* resolution out of hardware limit
 			 * frame is vertically divided into left and right
 			 */
-			if (hw->unite == ISP_UNITE_ONE) {
+			if (hw->unite == ISP_UNITE_ONE && isp->unite_div > ISP_UNITE_DIV1) {
 				isp->sw_rd_cnt *= 2;
 				isp->sw_rd_cnt += 1;
 			}
-		} else {
+		} else if (hw->unite == ISP_UNITE_ONE) {
 			isp->sw_rd_cnt += (isp->unite_div - 1);
 		}
 		/* first frame handle twice for thunderboot
