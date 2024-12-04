@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Copyright (c) 2020 Rockchip Electronics Co. Ltd.
+ * Copyright (c) 2020-2024 Rockchip Electronics Co., Ltd.
  *
  * Author: Zorro Liu <zorro.liu@rock-chips.com>
  */
@@ -372,9 +372,15 @@ rkf_wf_get_lut:
 	add	x9, x9, #1024
 	cmp	x10, x9
 	ldrb	w12, [x11, #960]
+	strb	wzr, [x11, #928]
 	ldrb	w13, [x11, #30]
+	strb	wzr, [x11, #958]
+	strb	wzr, [x11, #992]
+	strb	wzr, [x11, #1022]
+	strb	wzr, [x11, #32]
 	strb	w12, [x11]
 	strb	w13, [x11, #990]
+	strb	wzr, [x11, #62]
 	b.ne	.LBB2_28
 .LBB2_29:
 	lsl	w9, w22, #10
@@ -662,7 +668,7 @@ parse_wf_data:
 	stp	x22, x21, [sp, #32]
 	mov	x29, sp
 	stp	x20, x19, [sp, #48]
-	b.hi	.LBB3_14
+	b.hi	.LBB3_68
 	adrp	x9, .LJTI3_0
 	mov	w8, w1
 	add	x9, x9, :lo12:.LJTI3_0
@@ -676,20 +682,260 @@ parse_wf_data:
 	bic	w10, w2, w2, asr #31
 	cmp	w10, #50
 	mov	w11, #50
-	mov	x9, xzr
 	csel	w10, w10, w11, lo
+	mov	x9, xzr
 	ldr	x8, [x8, :lo12:global_waveform]
+	and	w10, w10, #0xff
 	add	x11, x8, #148
 .LBB3_3:
-	ldrb	w12, [x11, x9]
-	cmp	w12, w10, uxtb
-	b.hs	.LBB3_6
-	add	x9, x9, #1
-	cmp	x9, #50
-	b.ne	.LBB3_3
-	mov	x9, xzr
+	cbz	x9, .LBB3_6
+	sub	w12, w9, #1
+	ldrb	w13, [x11, x9]
+	add	x14, x8, x12
+	ldrb	w14, [x14, #148]
+	cmp	w13, w14
+	b.lo	.LBB3_60
+	cmp	w13, w10
+	b.ls	.LBB3_7
+	b	.LBB3_59
 .LBB3_6:
-	add	x9, x8, x9, lsl #2
+	ldrb	w13, [x8, #148]
+	cmp	w13, w10
+	b.hi	.LBB3_59
+.LBB3_7:
+	add	x9, x9, #1
+	cmp	x9, #51
+	b.ne	.LBB3_3
+	mov	x12, xzr
+	b	.LBB3_60
+.LBB3_9:
+	adrp	x8, global_waveform
+	bic	w10, w2, w2, asr #31
+	cmp	w10, #50
+	mov	w11, #50
+	csel	w10, w10, w11, lo
+	mov	x9, xzr
+	ldr	x8, [x8, :lo12:global_waveform]
+	and	w10, w10, #0xff
+	add	x11, x8, #468
+.LBB3_10:
+	cbz	x9, .LBB3_13
+	sub	w12, w9, #1
+	ldrb	w13, [x11, x9]
+	add	x14, x8, x12
+	ldrb	w14, [x14, #468]
+	cmp	w13, w14
+	b.lo	.LBB3_70
+	cmp	w13, w10
+	b.ls	.LBB3_14
+	b	.LBB3_69
+.LBB3_13:
+	ldrb	w13, [x8, #468]
+	cmp	w13, w10
+	b.hi	.LBB3_69
+.LBB3_14:
+	add	x9, x9, #1
+	cmp	x9, #51
+	b.ne	.LBB3_10
+	mov	x12, xzr
+	b	.LBB3_70
+.LBB3_16:
+	adrp	x8, global_waveform
+	bic	w10, w2, w2, asr #31
+	cmp	w10, #50
+	mov	w11, #50
+	csel	w10, w10, w11, lo
+	mov	x9, xzr
+	ldr	x8, [x8, :lo12:global_waveform]
+	and	w10, w10, #0xff
+	add	x11, x8, #212
+.LBB3_17:
+	cbz	x9, .LBB3_20
+	sub	w12, w9, #1
+	ldrb	w13, [x11, x9]
+	add	x14, x8, x12
+	ldrb	w14, [x14, #212]
+	cmp	w13, w14
+	b.lo	.LBB3_58
+	cmp	w13, w10
+	b.ls	.LBB3_21
+	b	.LBB3_57
+.LBB3_20:
+	ldrb	w13, [x8, #212]
+	cmp	w13, w10
+	b.hi	.LBB3_57
+.LBB3_21:
+	add	x9, x9, #1
+	cmp	x9, #51
+	b.ne	.LBB3_17
+	b	.LBB3_28
+.LBB3_22:
+	adrp	x8, global_waveform
+	bic	w10, w2, w2, asr #31
+	cmp	w10, #50
+	mov	w11, #50
+	csel	w10, w10, w11, lo
+	mov	x9, xzr
+	ldr	x8, [x8, :lo12:global_waveform]
+	and	w10, w10, #0xff
+	add	x11, x8, #212
+.LBB3_23:
+	cbz	x9, .LBB3_26
+	sub	w12, w9, #1
+	ldrb	w13, [x11, x9]
+	add	x14, x8, x12
+	ldrb	w14, [x14, #212]
+	cmp	w13, w14
+	b.lo	.LBB3_58
+	cmp	w13, w10
+	b.ls	.LBB3_27
+	b	.LBB3_57
+.LBB3_26:
+	ldrb	w13, [x8, #212]
+	cmp	w13, w10
+	b.hi	.LBB3_57
+.LBB3_27:
+	add	x9, x9, #1
+	cmp	x9, #51
+	b.ne	.LBB3_23
+.LBB3_28:
+	mov	x12, xzr
+	b	.LBB3_58
+.LBB3_29:
+	adrp	x8, global_waveform
+	bic	w10, w2, w2, asr #31
+	cmp	w10, #50
+	mov	w11, #50
+	csel	w10, w10, w11, lo
+	mov	x9, xzr
+	ldr	x8, [x8, :lo12:global_waveform]
+	and	w10, w10, #0xff
+	add	x11, x8, #276
+.LBB3_30:
+	cbz	x9, .LBB3_33
+	sub	w12, w9, #1
+	ldrb	w13, [x11, x9]
+	add	x14, x8, x12
+	ldrb	w14, [x14, #276]
+	cmp	w13, w14
+	b.lo	.LBB3_72
+	cmp	w13, w10
+	b.ls	.LBB3_34
+	b	.LBB3_71
+.LBB3_33:
+	ldrb	w13, [x8, #276]
+	cmp	w13, w10
+	b.hi	.LBB3_71
+.LBB3_34:
+	add	x9, x9, #1
+	cmp	x9, #51
+	b.ne	.LBB3_30
+	mov	x12, xzr
+	b	.LBB3_72
+.LBB3_36:
+	adrp	x8, global_waveform
+	bic	w10, w2, w2, asr #31
+	cmp	w10, #50
+	mov	w11, #50
+	csel	w10, w10, w11, lo
+	mov	x9, xzr
+	ldr	x8, [x8, :lo12:global_waveform]
+	and	w10, w10, #0xff
+	add	x11, x8, #340
+.LBB3_37:
+	cbz	x9, .LBB3_40
+	sub	w12, w9, #1
+	ldrb	w13, [x11, x9]
+	add	x14, x8, x12
+	ldrb	w14, [x14, #340]
+	cmp	w13, w14
+	b.lo	.LBB3_74
+	cmp	w13, w10
+	b.ls	.LBB3_41
+	b	.LBB3_73
+.LBB3_40:
+	ldrb	w13, [x8, #340]
+	cmp	w13, w10
+	b.hi	.LBB3_73
+.LBB3_41:
+	add	x9, x9, #1
+	cmp	x9, #51
+	b.ne	.LBB3_37
+	mov	x12, xzr
+	b	.LBB3_74
+.LBB3_43:
+	adrp	x8, global_waveform
+	bic	w10, w2, w2, asr #31
+	cmp	w10, #50
+	mov	w11, #50
+	csel	w10, w10, w11, lo
+	mov	x9, xzr
+	ldr	x8, [x8, :lo12:global_waveform]
+	and	w10, w10, #0xff
+	add	x11, x8, #404
+.LBB3_44:
+	cbz	x9, .LBB3_47
+	sub	w12, w9, #1
+	ldrb	w13, [x11, x9]
+	add	x14, x8, x12
+	ldrb	w14, [x14, #404]
+	cmp	w13, w14
+	b.lo	.LBB3_76
+	cmp	w13, w10
+	b.ls	.LBB3_48
+	b	.LBB3_75
+.LBB3_47:
+	ldrb	w13, [x8, #404]
+	cmp	w13, w10
+	b.hi	.LBB3_75
+.LBB3_48:
+	add	x9, x9, #1
+	cmp	x9, #51
+	b.ne	.LBB3_44
+	mov	x12, xzr
+	b	.LBB3_76
+.LBB3_50:
+	adrp	x8, global_waveform
+	bic	w10, w2, w2, asr #31
+	cmp	w10, #50
+	mov	w11, #50
+	csel	w10, w10, w11, lo
+	mov	x9, xzr
+	ldr	x8, [x8, :lo12:global_waveform]
+	and	w10, w10, #0xff
+	add	x11, x8, #532
+.LBB3_51:
+	cbz	x9, .LBB3_54
+	sub	w12, w9, #1
+	ldrb	w13, [x11, x9]
+	add	x14, x8, x12
+	ldrb	w14, [x14, #532]
+	cmp	w13, w14
+	b.lo	.LBB3_78
+	cmp	w13, w10
+	b.ls	.LBB3_55
+	b	.LBB3_77
+.LBB3_54:
+	ldrb	w13, [x8, #532]
+	cmp	w13, w10
+	b.hi	.LBB3_77
+.LBB3_55:
+	add	x9, x9, #1
+	cmp	x9, #51
+	b.ne	.LBB3_51
+	mov	x12, xzr
+	b	.LBB3_78
+.LBB3_57:
+	sub	w12, w9, #1
+.LBB3_58:
+	add	x9, x8, x12, lsl #2
+	adrp	x10, maxpic
+	ldr	w9, [x9, #852]
+	b	.LBB3_79
+.LBB3_59:
+	sub	w12, w9, #1
+.LBB3_60:
+	add	x9, x8, x12, lsl #2
 	mov	w1, #3520
 	ldr	w9, [x9, #596]
 	add	x24, x8, x9
@@ -699,7 +945,7 @@ parse_wf_data:
 	and	x22, x8, #0x7c
 	mov	x0, x22
 	bl	__kmalloc
-	cbz	x0, .LBB3_14
+	cbz	x0, .LBB3_68
 	add	x1, x24, #4
 	mov	x2, x22
 	mov	x21, x0
@@ -708,8 +954,8 @@ parse_wf_data:
 	mov	w1, #3520
 	and	w0, w8, #0x7c00
 	bl	__kmalloc
-	cbz	x0, .LBB3_52
-	cbz	w20, .LBB3_13
+	cbz	x0, .LBB3_83
+	cbz	w20, .LBB3_67
 	lsr	w11, w23, #4
 	mov	w10, #16384
 	cmp	w11, #1
@@ -720,11 +966,11 @@ parse_wf_data:
 	csinc	w11, w11, wzr, gt
 	movk	w12, #5440, lsl #16
 	mov	x13, x21
-.LBB3_10:
+.LBB3_64:
 	mov	w15, wzr
 	mov	w14, wzr
 	ldr	w16, [x13]
-.LBB3_11:
+.LBB3_65:
 	asr	w17, w16, w15
 	add	w3, w8, w14
 	and	w1, w17, #0x3
@@ -767,170 +1013,55 @@ parse_wf_data:
 	add	w1, w3, #15
 	str	w17, [x0, w2, sxtw #2]
 	str	w17, [x0, w1, sxtw #2]
-	b.ne	.LBB3_11
+	b.ne	.LBB3_65
 	add	x13, x13, #4
 	add	w9, w9, #1
 	add	w8, w8, w14
 	cmp	w9, w11
-	b.ne	.LBB3_10
-.LBB3_13:
+	b.ne	.LBB3_64
+.LBB3_67:
 	str	x0, [x19, #8]
 	mov	x0, x21
 	bl	kfree
-	b	.LBB3_51
-.LBB3_14:
+	b	.LBB3_82
+.LBB3_68:
 	mov	w20, #-1
-	b	.LBB3_51
-.LBB3_15:
-	adrp	x8, global_waveform
-	bic	w10, w2, w2, asr #31
-	cmp	w10, #50
-	mov	w11, #50
-	mov	x9, xzr
-	csel	w10, w10, w11, lo
-	ldr	x8, [x8, :lo12:global_waveform]
-	add	x11, x8, #468
-.LBB3_16:
-	ldrb	w12, [x11, x9]
-	cmp	w12, w10, uxtb
-	b.hs	.LBB3_19
-	add	x9, x9, #1
-	cmp	x9, #50
-	b.ne	.LBB3_16
-	mov	x9, xzr
-.LBB3_19:
-	add	x9, x8, x9, lsl #2
+	b	.LBB3_82
+.LBB3_69:
+	sub	w12, w9, #1
+.LBB3_70:
+	add	x9, x8, x12, lsl #2
 	adrp	x10, maxpic
 	ldr	w9, [x9, #1876]
-	b	.LBB3_48
-.LBB3_20:
-	adrp	x8, global_waveform
-	bic	w10, w2, w2, asr #31
-	cmp	w10, #50
-	mov	w11, #50
-	mov	x9, xzr
-	csel	w10, w10, w11, lo
-	ldr	x8, [x8, :lo12:global_waveform]
-	add	x11, x8, #212
-.LBB3_21:
-	ldrb	w12, [x11, x9]
-	cmp	w12, w10, uxtb
-	b.hs	.LBB3_27
-	add	x9, x9, #1
-	cmp	x9, #50
-	b.ne	.LBB3_21
-	b	.LBB3_26
-.LBB3_23:
-	adrp	x8, global_waveform
-	bic	w10, w2, w2, asr #31
-	cmp	w10, #50
-	mov	w11, #50
-	mov	x9, xzr
-	csel	w10, w10, w11, lo
-	ldr	x8, [x8, :lo12:global_waveform]
-	add	x11, x8, #212
-.LBB3_24:
-	ldrb	w12, [x11, x9]
-	cmp	w12, w10, uxtb
-	b.hs	.LBB3_27
-	add	x9, x9, #1
-	cmp	x9, #50
-	b.ne	.LBB3_24
-.LBB3_26:
-	mov	x9, xzr
-.LBB3_27:
-	add	x9, x8, x9, lsl #2
-	adrp	x10, maxpic
-	ldr	w9, [x9, #852]
-	b	.LBB3_48
-.LBB3_28:
-	adrp	x8, global_waveform
-	bic	w10, w2, w2, asr #31
-	cmp	w10, #50
-	mov	w11, #50
-	mov	x9, xzr
-	csel	w10, w10, w11, lo
-	ldr	x8, [x8, :lo12:global_waveform]
-	add	x11, x8, #276
-.LBB3_29:
-	ldrb	w12, [x11, x9]
-	cmp	w12, w10, uxtb
-	b.hs	.LBB3_32
-	add	x9, x9, #1
-	cmp	x9, #50
-	b.ne	.LBB3_29
-	mov	x9, xzr
-.LBB3_32:
-	add	x9, x8, x9, lsl #2
+	b	.LBB3_79
+.LBB3_71:
+	sub	w12, w9, #1
+.LBB3_72:
+	add	x9, x8, x12, lsl #2
 	adrp	x10, maxpic
 	ldr	w9, [x9, #1108]
-	b	.LBB3_48
-.LBB3_33:
-	adrp	x8, global_waveform
-	bic	w10, w2, w2, asr #31
-	cmp	w10, #50
-	mov	w11, #50
-	mov	x9, xzr
-	csel	w10, w10, w11, lo
-	ldr	x8, [x8, :lo12:global_waveform]
-	add	x11, x8, #340
-.LBB3_34:
-	ldrb	w12, [x11, x9]
-	cmp	w12, w10, uxtb
-	b.hs	.LBB3_37
-	add	x9, x9, #1
-	cmp	x9, #50
-	b.ne	.LBB3_34
-	mov	x9, xzr
-.LBB3_37:
-	add	x9, x8, x9, lsl #2
+	b	.LBB3_79
+.LBB3_73:
+	sub	w12, w9, #1
+.LBB3_74:
+	add	x9, x8, x12, lsl #2
 	adrp	x10, maxpic
 	ldr	w9, [x9, #1364]
-	b	.LBB3_48
-.LBB3_38:
-	adrp	x8, global_waveform
-	bic	w10, w2, w2, asr #31
-	cmp	w10, #50
-	mov	w11, #50
-	mov	x9, xzr
-	csel	w10, w10, w11, lo
-	ldr	x8, [x8, :lo12:global_waveform]
-	add	x11, x8, #404
-.LBB3_39:
-	ldrb	w12, [x11, x9]
-	cmp	w12, w10, uxtb
-	b.hs	.LBB3_42
-	add	x9, x9, #1
-	cmp	x9, #50
-	b.ne	.LBB3_39
-	mov	x9, xzr
-.LBB3_42:
-	add	x9, x8, x9, lsl #2
+	b	.LBB3_79
+.LBB3_75:
+	sub	w12, w9, #1
+.LBB3_76:
+	add	x9, x8, x12, lsl #2
 	adrp	x10, maxpic
 	ldr	w9, [x9, #1620]
-	b	.LBB3_48
-.LBB3_43:
-	adrp	x8, global_waveform
-	bic	w10, w2, w2, asr #31
-	cmp	w10, #50
-	mov	w11, #50
-	mov	x9, xzr
-	csel	w10, w10, w11, lo
-	ldr	x8, [x8, :lo12:global_waveform]
-	add	x11, x8, #532
-.LBB3_44:
-	ldrb	w12, [x11, x9]
-	cmp	w12, w10, uxtb
-	b.hs	.LBB3_47
-	add	x9, x9, #1
-	cmp	x9, #50
-	b.ne	.LBB3_44
-	mov	x9, xzr
-.LBB3_47:
-	add	x9, x8, x9, lsl #2
+	b	.LBB3_79
+.LBB3_77:
+	sub	w12, w9, #1
+.LBB3_78:
+	add	x9, x8, x12, lsl #2
 	adrp	x10, maxpic
 	ldr	w9, [x9, #2132]
-.LBB3_48:
+.LBB3_79:
 	ldrb	w10, [x10, :lo12:maxpic]
 	add	x23, x8, x9
 	mov	w8, #16
@@ -941,20 +1072,20 @@ parse_wf_data:
 	csel	w8, w9, w8, ne
 	umull	x9, w8, w20
 	mul	x8, x9, x8
-	lsl	x21, x8, #1
+	lsr	x21, x8, #2
 	mov	x0, x21
 	bl	__kmalloc
-	cbz	x0, .LBB3_50
+	cbz	x0, .LBB3_81
 	add	x1, x23, #4
 	mov	x2, x21
 	mov	x22, x0
 	bl	memcpy
 	str	x22, [x19, #8]
-	b	.LBB3_51
-.LBB3_50:
+	b	.LBB3_82
+.LBB3_81:
 	mov	w20, #-1
 	str	xzr, [x19, #8]
-.LBB3_51:
+.LBB3_82:
 	mov	w0, w20
 	ldp	x20, x19, [sp, #48]
 	ldp	x22, x21, [sp, #32]
@@ -962,24 +1093,24 @@ parse_wf_data:
 	ldp	x29, x30, [sp], #64
 	ldr	x30, [x18, #-8]!
 	ret
-.LBB3_52:
+.LBB3_83:
 	mov	x0, x21
 	str	xzr, [x19, #8]
 	bl	kfree
 	mov	w20, #-1
-	b	.LBB3_51
+	b	.LBB3_82
 .Lfunc_end3:
 	.size	parse_wf_data, .Lfunc_end3-parse_wf_data
 	.section	.rodata,"a",@progbits
 .LJTI3_0:
 	.byte	(.LBB3_2-.LBB3_2)>>2
-	.byte	(.LBB3_15-.LBB3_2)>>2
-	.byte	(.LBB3_20-.LBB3_2)>>2
-	.byte	(.LBB3_23-.LBB3_2)>>2
-	.byte	(.LBB3_28-.LBB3_2)>>2
-	.byte	(.LBB3_33-.LBB3_2)>>2
-	.byte	(.LBB3_38-.LBB3_2)>>2
+	.byte	(.LBB3_9-.LBB3_2)>>2
+	.byte	(.LBB3_16-.LBB3_2)>>2
+	.byte	(.LBB3_22-.LBB3_2)>>2
+	.byte	(.LBB3_29-.LBB3_2)>>2
+	.byte	(.LBB3_36-.LBB3_2)>>2
 	.byte	(.LBB3_43-.LBB3_2)>>2
+	.byte	(.LBB3_50-.LBB3_2)>>2
 
 	.text
 	.p2align	2

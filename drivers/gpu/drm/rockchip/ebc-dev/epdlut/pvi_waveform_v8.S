@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Copyright (c) 2020 Rockchip Electronics Co. Ltd.
+ * Copyright (c) 2020-2024 Rockchip Electronics Co., Ltd.
  *
  * Author: Zorro Liu <zorro.liu@rock-chips.com>
  */
@@ -168,9 +168,15 @@ pvi_wf_get_lut:
 	add	x9, x9, #1024
 	cmp	x10, x9
 	ldrb	w12, [x11, #960]
+	strb	wzr, [x11, #928]
 	ldrb	w13, [x11, #30]
+	strb	wzr, [x11, #958]
+	strb	wzr, [x11, #992]
+	strb	wzr, [x11, #1022]
+	strb	wzr, [x11, #32]
 	strb	w12, [x11]
 	strb	w13, [x11, #990]
+	strb	wzr, [x11, #62]
 	b.ne	.LBB0_37
 .LBB0_38:
 	lsl	w9, w23, #10

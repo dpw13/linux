@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Copyright (c) 2020 Rockchip Electronics Co. Ltd.
+ * Copyright (c) 2020-2024 Rockchip Electronics Co., Ltd.
  *
  * Author: Zorro Liu <zorro.liu@rock-chips.com>
  */
@@ -9,7 +9,7 @@
 	.file	"ebc_dev_y8.c"
 
 	.section	.initcall6s.init,"a",@progbits
-__initcall__kmod_rkebc__465_4240_ebc_init6s:
+__initcall__kmod_rkebc__465_4244_ebc_init6s:
 .Ltmp0:
 	.word	ebc_init-.Ltmp0
 	.text
@@ -1655,7 +1655,7 @@ ebc_lut_table_init:
 	ldr	x0, [x19, #96]
 	add	x1, x1, :lo12:.L.str.57
 	add	x2, x2, :lo12:.L__func__.ebc_lut_table_init
-	mov	w3, #3690
+	mov	w3, #3694
 	bl	_dev_err
 	mov	w0, #-12
 	b	.LBB9_6
@@ -4123,13 +4123,14 @@ ebc_thread:
 	b.ne	.LBB16_248
 	cmp	w9, #1
 	b.lt	.LBB16_258
-	ldr	x15, [x20, #432]
+	ldr	x16, [x20, #432]
 	mov	w12, wzr
+	ldr	w14, [x20, #852]
 	mov	w13, wzr
 	mov	w11, wzr
-	ldr	x14, [x20, #360]
-	ldr	x15, [x15, #16]
-	ldr	w16, [x20, #852]
+	ldr	x15, [x20, #360]
+	ldr	x16, [x16, #16]
+	add	w17, w14, #2
 	b	.LBB16_241
 .LBB16_240:
 	add	w13, w13, #1
@@ -4139,44 +4140,50 @@ ebc_thread:
 .LBB16_241:
 	cmp	w8, #1
 	b.lt	.LBB16_240
-	mov	w0, w12
-	mov	x17, x8
+	mov	w1, w12
+	mov	x0, x8
 	b	.LBB16_245
 .LBB16_243:
-	strb	w25, [x10, x0]
+	strb	w25, [x10, x1]
 .LBB16_244:
-	subs	x17, x17, #1
-	add	w0, w0, #1
+	subs	x0, x0, #1
+	add	w1, w1, #1
 	b.eq	.LBB16_240
 .LBB16_245:
-	sxtw	x0, w0
-	ldrb	w1, [x15, x0]
-	ldrb	w2, [x14, x0]
-	cmp	w2, w1
+	sxtw	x1, w1
+	ldrb	w2, [x16, x1]
+	ldrb	w3, [x15, x1]
+	cmp	w3, w2
 	b.eq	.LBB16_244
-	cbz	w16, .LBB16_243
-	and	w4, w2, #0xf
-	and	w3, w2, #0xf0
-	and	w5, w1, #0xf0
-	cmp	w16, w4
-	csinc	w1, w1, w2, le
+	cbz	w14, .LBB16_243
+	mvn	w4, w2
+	and	w5, w3, #0xf
+	and	w4, w4, #0xfffffff0
+	cmp	w5, #1
+	add	w4, w17, w4
+	csinc	w6, w11, wzr, eq
+	sub	w4, w4, w5
+	csel	w4, w2, w4, eq
+	cmp	w14, w5
+	and	w5, w3, #0xf0
+	csinc	w3, w2, w3, le
 	csinc	w11, w11, wzr, le
-	cmp	w3, w5
-	eor	w4, w3, #0xfffffff1
-	csel	w11, w25, w11, eq
-	csel	w1, w4, w1, eq
-	strb	w1, [x14, x0]
+	cmp	w5, w2
+	csel	w11, w6, w11, eq
+	csel	w2, w4, w3, eq
+	strb	w2, [x15, x1]
 	b	.LBB16_243
 .LBB16_248:
 	cmp	w9, #1
 	b.lt	.LBB16_258
-	ldp	x14, x15, [x20, #424]
+	ldp	x15, x17, [x20, #424]
 	mov	w12, wzr
 	mov	w13, wzr
+	ldr	w14, [x20, #852]
 	mov	w11, wzr
-	ldr	w16, [x20, #852]
-	ldr	x14, [x14, #16]
 	ldr	x15, [x15, #16]
+	add	w16, w14, #2
+	ldr	x17, [x17, #16]
 	b	.LBB16_251
 .LBB16_250:
 	add	w13, w13, #1
@@ -4186,33 +4193,38 @@ ebc_thread:
 .LBB16_251:
 	cmp	w8, #1
 	b.lt	.LBB16_250
-	mov	w0, w12
-	mov	x17, x8
+	mov	w1, w12
+	mov	x0, x8
 	b	.LBB16_255
 .LBB16_253:
-	strb	w25, [x10, x0]
+	strb	w25, [x10, x1]
 .LBB16_254:
-	subs	x17, x17, #1
-	add	w0, w0, #1
+	subs	x0, x0, #1
+	add	w1, w1, #1
 	b.eq	.LBB16_250
 .LBB16_255:
-	sxtw	x0, w0
-	ldrb	w1, [x15, x0]
-	ldrb	w2, [x14, x0]
-	cmp	w2, w1
+	sxtw	x1, w1
+	ldrb	w2, [x17, x1]
+	ldrb	w3, [x15, x1]
+	cmp	w3, w2
 	b.eq	.LBB16_254
-	cbz	w16, .LBB16_253
-	and	w4, w2, #0xf
-	and	w3, w2, #0xf0
-	and	w5, w1, #0xf0
-	cmp	w16, w4
-	csinc	w1, w1, w2, le
+	cbz	w14, .LBB16_253
+	mvn	w4, w2
+	and	w5, w3, #0xf
+	and	w4, w4, #0xfffffff0
+	cmp	w5, #1
+	add	w4, w16, w4
+	csinc	w6, w11, wzr, eq
+	sub	w4, w4, w5
+	csel	w4, w2, w4, eq
+	cmp	w14, w5
+	and	w5, w3, #0xf0
+	csinc	w3, w2, w3, le
 	csinc	w11, w11, wzr, le
-	cmp	w3, w5
-	eor	w4, w3, #0xfffffff1
-	csel	w11, w25, w11, eq
-	csel	w1, w4, w1, eq
-	strb	w1, [x14, x0]
+	cmp	w5, w2
+	csel	w11, w6, w11, eq
+	csel	w2, w4, w3, eq
+	strb	w2, [x15, x1]
 	b	.LBB16_253
 .LBB16_258:
 	mov	w11, wzr
@@ -11794,7 +11806,7 @@ ebc_pm:
 
 	.type	.L.str.21,@object
 .L.str.21:
-	.asciz	"7.00_y8"
+	.asciz	"7.01_y8"
 	.size	.L.str.21, 8
 
 	.type	ebc_auto_task,@object
@@ -12143,8 +12155,8 @@ ebc_auto_assist_thread_sem:
 
 	.type	.L.str.80,@object
 .L.str.80:
-	.asciz	"break from part work, do somthing before turn to overlay work\n"
-	.size	.L.str.80, 63
+	.asciz	"break from part work, do something before turn to overlay work\n"
+	.size	.L.str.80, 64
 
 	.type	.L.str.81,@object
 .L.str.81:
@@ -12487,8 +12499,8 @@ ebc_ops:
 
 	.type	.L.str.112,@object
 .L.str.112:
-	.asciz	"enable ebc overlay, you can use osd buf to show somthing over the system display\n"
-	.size	.L.str.112, 82
+	.asciz	"enable ebc overlay, you can use osd buf to show something over the system display\n"
+	.size	.L.str.112, 83
 
 	.type	.L.str.113,@object
 .L.str.113:
@@ -12522,8 +12534,8 @@ ebc_ops:
 
 	.type	.L.str.119,@object
 .L.str.119:
-	.asciz	"%s: unknow cmd\n"
-	.size	.L.str.119, 16
+	.asciz	"%s: unknown cmd\n"
+	.size	.L.str.119, 17
 
 	.type	.L.str.120,@object
 .L.str.120:
