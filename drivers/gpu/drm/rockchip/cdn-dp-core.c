@@ -11,6 +11,7 @@
 #include <linux/phy/phy.h>
 #include <linux/regmap.h>
 #include <linux/reset.h>
+#include <uapi/linux/videodev2.h>
 
 #include <sound/hdmi-codec.h>
 
@@ -359,8 +360,7 @@ static int cdn_dp_get_sink_capability(struct cdn_dp_device *dp)
 	if (!cdn_dp_check_sink_connection(dp))
 		return -ENODEV;
 
-	ret = drm_dp_dpcd_read(&dp->aux, DP_DPCD_REV, dp->dpcd,
-			       sizeof(dp->dpcd));
+	ret = drm_dp_read_dpcd_caps(&dp->aux, dp->dpcd);
 	if (ret < 0) {
 		DRM_DEV_ERROR(dp->dev, "Failed to get caps %d\n", ret);
 		return ret;
@@ -442,12 +442,77 @@ static int cdn_dp_disable_phy(struct cdn_dp_device *dp,
 	return 0;
 }
 
+static int cdn_dp_link_power_up(struct cdn_dp_device *dp)
+{
+	u8 value;
+	int err;
+
+	/* DP_SET_POWER register is only available on DPCD v1.1 and later */
+	if (dp->dpcd[DP_DPCD_REV] < 0x11)
+		return 0;
+
+	err = drm_dp_dpcd_readb(&dp->aux, DP_SET_POWER, &value);
+	if (err < 0)
+		return err;
+
+	value &= ~DP_SET_POWER_MASK;
+	value |= DP_SET_POWER_D0;
+
+	err = drm_dp_dpcd_writeb(&dp->aux, DP_SET_POWER, value);
+	if (err < 0)
+		return err;
+
+	/*
+	 * According to the DP 1.1 specification, a "Sink Device must exit the
+	 * power saving state within 1 ms" (Section 2.5.3.1, Table 5-52, "Sink
+	 * Control Field" (register 0x600).
+	 */
+	usleep_range(1000, 2000);
+
+	value &= ~DP_SET_POWER_MASK;
+	value |= DP_SET_POWER_D0;
+
+	err = drm_dp_dpcd_writeb(&dp->aux, DP_SET_POWER, value);
+	if (err < 0)
+		return err;
+
+	usleep_range(1000, 2000);
+
+	return 0;
+}
+
+static int cdn_dp_link_power_down(struct cdn_dp_device *dp)
+{
+	u8 value;
+	int err;
+
+	/* DP_SET_POWER register is only available on DPCD v1.1 and later */
+	if (dp->dpcd[DP_DPCD_REV] < 0x11)
+		return 0;
+
+	err = drm_dp_dpcd_readb(&dp->aux, DP_SET_POWER, &value);
+	if (err < 0)
+		return err;
+
+	value &= ~DP_SET_POWER_MASK;
+	value |= DP_SET_POWER_D3;
+
+	err = drm_dp_dpcd_writeb(&dp->aux, DP_SET_POWER, value);
+	if (err < 0)
+		return err;
+
+	return 0;
+}
+
 static int cdn_dp_disable(struct cdn_dp_device *dp)
 {
 	int ret, i;
 
 	if (!dp->active)
 		return 0;
+
+	if (dp->connected)
+		cdn_dp_link_power_down(dp);
 
 	for (i = 0; i < dp->ports; i++)
 		cdn_dp_disable_phy(dp, dp->port[i]);
@@ -506,7 +571,7 @@ static int cdn_dp_enable(struct cdn_dp_device *dp)
 			ret = cdn_dp_enable_phy(dp, port);
 			if (ret)
 				continue;
-
+			cdn_dp_link_power_up(dp);
 			ret = cdn_dp_get_sink_capability(dp);
 			if (ret) {
 				cdn_dp_disable_phy(dp, port);
@@ -677,11 +742,25 @@ static int cdn_dp_encoder_atomic_check(struct drm_encoder *encoder,
 				       struct drm_crtc_state *crtc_state,
 				       struct drm_connector_state *conn_state)
 {
+	struct cdn_dp_device *dp = encoder_to_dp(encoder);
+	struct drm_display_info *di = &dp->connector.display_info;
 	struct rockchip_crtc_state *s = to_rockchip_crtc_state(crtc_state);
+
+	switch (di->bpc) {
+	case 6:
+		s->bus_format = MEDIA_BUS_FMT_RGB666_1X24_CPADHI;
+		break;
+	case 8:
+	default:
+		s->bus_format = MEDIA_BUS_FMT_RGB888_1X24;
+		break;
+	}
 
 	s->output_mode = ROCKCHIP_OUT_MODE_AAAA;
 	s->output_type = DRM_MODE_CONNECTOR_DisplayPort;
 	s->tv_state = &conn_state->tv;
+	s->eotf = HDMI_EOTF_TRADITIONAL_GAMMA_SDR;
+	s->color_encoding = DRM_COLOR_YCBCR_BT709;
 
 	return 0;
 }
@@ -903,7 +982,8 @@ static int cdn_dp_request_firmware(struct cdn_dp_device *dp)
 	mutex_unlock(&dp->lock);
 
 	while (time_before(jiffies, timeout)) {
-		ret = request_firmware(&dp->fw, CDN_DP_FIRMWARE, dp->dev);
+		ret = request_firmware_direct(&dp->fw, CDN_DP_FIRMWARE,
+					      dp->dev);
 		if (ret == -ENOENT) {
 			msleep(sleep);
 			sleep *= 2;
@@ -1081,6 +1161,7 @@ static int cdn_dp_bind(struct device *dev, struct device *master, void *data)
 	connector = &dp->connector;
 	connector->polled = DRM_CONNECTOR_POLL_HPD;
 	connector->dpms = DRM_MODE_DPMS_OFF;
+	connector->fwnode = dev_fwnode(dev);
 
 	ret = drm_connector_init(drm_dev, connector,
 				 &cdn_dp_atomic_connector_funcs,
