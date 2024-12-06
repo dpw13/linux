@@ -1834,11 +1834,9 @@ int rockchip_pwm_get_biphasic_result(struct pwm_device *pwm, unsigned long *biph
 		return ret;
 
 	ret = pc->data->funcs.get_biphasic_result(chip, pwm, biphasic_res);
-	if (ret) {
+	if (ret)
 		dev_err(chip->dev, "Failed to get biphasic counter result for PWM%d\n",
 			pc->channel_id);
-		return -EINVAL;
-	}
 
 	clk_disable(pc->pclk);
 
@@ -2206,14 +2204,6 @@ static int rockchip_pwm_probe(struct platform_device *pdev)
 		goto err_pclk;
 	}
 
-	rockchip_pwm_debugfs_init(pc);
-
-	/* Keep the PWM clk enabled if the PWM appears to be up and running. */
-	if (!enabled)
-		clk_disable(pc->clk);
-
-	clk_disable(pc->pclk);
-
 	if (pc->wave_support) {
 		if (!pc->clk_osc) {
 			dev_err(&pdev->dev, "Can't find OSC clk for wave generator mode\n");
@@ -2227,6 +2217,14 @@ static int rockchip_pwm_probe(struct platform_device *pdev)
 			goto err_pclk;
 		}
 	}
+
+	rockchip_pwm_debugfs_init(pc);
+
+	/* Keep the PWM clk enabled if the PWM appears to be up and running. */
+	if (!enabled)
+		clk_disable(pc->clk);
+
+	clk_disable(pc->pclk);
 
 	return 0;
 
