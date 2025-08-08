@@ -546,7 +546,7 @@ static int rkflash_blk_add_dev(struct flash_blk_dev *dev,
 			 "%s",
 			 part->name);
 	} else {
-		gd->flags = GENHD_FL_EXT_DEVT;
+		gd->flags = GENHD_FL_NO_PART_SCAN;
 		gd->minors = 255;
 		snprintf(gd->disk_name,
 			 sizeof(gd->disk_name),
