@@ -264,7 +264,7 @@ static blk_status_t do_blktrans_all_request(struct flash_blk_ops *tr,
 	totle_nsect = (req->__data_len) >> 9;
 
 	if (blk_rq_pos(req) + blk_rq_cur_sectors(req) >
-	    get_capacity(req->rq_disk))
+	    get_capacity(req->q->disk))
 		return BLK_STS_IOERR;
 
 	switch (req_op(req)) {
