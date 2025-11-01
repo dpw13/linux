@@ -1,4 +1,5 @@
-src = $(PWD)/drivers/net/wireless/rtl8821cu
+src = $(PWD)/kernel/hardkernel/odroidm1s/drivers/net/wireless/rtl8821cu
+#src = $(PWD)/drivers/net/wireless/rtl8821cu
 
 EXTRA_CFLAGS += $(USER_EXTRA_CFLAGS)
 EXTRA_CFLAGS += -O1

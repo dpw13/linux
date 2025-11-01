@@ -25,7 +25,7 @@ static void prom_adjust_regs(struct linux_prom_registers *regp, int nregs,
 	for (regc = 0; regc < nregs; regc++) {
 		for (rngc = 0; rngc < nranges; rngc++)
 			if (regp[regc].which_io == rangep[rngc].ot_child_space)
-				break; /* Fount it */
+				break; /* Found it */
 		if (rngc == nranges) /* oops */
 			prom_printf("adjust_regs: Could not find range with matching bus type...\n");
 		regp[regc].which_io = rangep[rngc].ot_parent_space;
