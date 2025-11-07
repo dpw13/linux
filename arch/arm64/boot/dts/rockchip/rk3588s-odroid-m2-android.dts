@@ -18,6 +18,9 @@
 #include "rk3588s-odroid-m2.dtsi"
 #include "rk3588-android.dtsi"
 
+#include "rk3588s-odroid-m2-vu8s.dtsi"
+#include "rk3588s-odroid-m2-spdif.dtsi"
+
 / {
 	model = "Hardkernel ODROID-M2";
 	compatible = "hardkernel,odroid-m2", "rockchip,rk3588";

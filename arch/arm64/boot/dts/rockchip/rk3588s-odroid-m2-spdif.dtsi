@@ -1,0 +1,14 @@
+&spdif_tx_sound {
+    status = "okay";
+    simple-audio-card,cpu {
+        sound-dai = <&spdif_tx1>;
+    };
+};
+
+&spdif_tx_dc {
+    status = "okay";
+};
+
+&spdif_tx1 {
+    status = "okay";
+};
