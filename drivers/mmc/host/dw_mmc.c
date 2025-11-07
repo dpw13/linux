@@ -428,6 +428,9 @@ static inline void dw_mci_set_cto(struct dw_mci *host)
 static void dw_mci_start_command(struct dw_mci *host,
 				 struct mmc_command *cmd, u32 cmd_flags)
 {
+	if (host->cmd) {
+		dev_warn_once(host->dev, "Squashing previous command %08x:%08x, state is %d", host->cmd->opcode, host->cmd->arg, host->state);
+	}
 	host->cmd = cmd;
 	dev_vdbg(host->dev,
 		 "start command: ARGR=0x%08x CMDR=0x%08x\n",
@@ -1192,7 +1195,9 @@ static void dw_mci_submit_data(struct dw_mci *host, struct mmc_data *data)
 
 	data->error = -EINPROGRESS;
 
-	WARN_ON(host->data);
+	if (host->data) {
+		dev_warn_once(host->dev, "Squashing previous data %p, state is %d", host->data, host->state);
+	}
 	host->sg = NULL;
 	host->data = data;
 
@@ -1444,6 +1449,9 @@ static void dw_mci_queue_request(struct dw_mci *host, struct dw_mci_slot *slot,
 	dev_vdbg(&slot->mmc->class_dev, "queue request: state=%d\n",
 		 host->state);
 
+	if (slot->mrq) {
+		dev_warn_once(host->dev, "dw_mci_queue_request: pending request %p", slot->mrq);
+	}
 	slot->mrq = mrq;
 
 	if (host->state == STATE_WAITING_CMD11_DONE) {
@@ -1470,8 +1478,6 @@ static void dw_mci_request(struct mmc_host *mmc, struct mmc_request *mrq)
 {
 	struct dw_mci_slot *slot = mmc_priv(mmc);
 	struct dw_mci *host = slot->host;
-
-	WARN_ON(slot->mrq);
 
 	/*
 	 * The check for card presence and queueing of the request must be
@@ -1967,7 +1973,9 @@ static void dw_mci_request_end(struct dw_mci *host, struct mmc_request *mrq)
 	struct dw_mci_slot *slot;
 	struct mmc_host	*prev_mmc = host->slot->mmc;
 
-	WARN_ON(host->cmd || host->data);
+	if (host->cmd || host->data) {
+		dev_warn_once(host->dev, "pending command (%p) or data (%p) at dw_mci_request_end", host->cmd, host->data);
+	}
 
 	if (host->need_xfer_timer)
 		del_timer(&host->xfer_timer);
