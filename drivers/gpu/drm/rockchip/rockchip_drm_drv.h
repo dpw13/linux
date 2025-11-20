@@ -27,6 +27,8 @@
 
 #include "rockchip_drm_debugfs.h"
 
+#define DRM_FORMAT_MOD_IS_ARM_AFBC(mod) (((mod) & 0xfff0000000000000ULL) == DRM_FORMAT_MOD_ARM_AFBC(0))
+
 #define ROCKCHIP_MAX_FB_BUFFER	3
 #define ROCKCHIP_MAX_CONNECTOR	2
 #define ROCKCHIP_MAX_CRTC	4

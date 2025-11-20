@@ -2651,9 +2651,22 @@ static uint32_t vop2_afbc_transform_offset(struct vop2 *vop2, struct vop2_plane_
 		if (IS_ROCKCHIP_RFBC_MOD(fb->modifier)) {
 			block_w = 64;
 			block_h = 4;
-		} else if (fb->modifier & AFBC_FORMAT_MOD_BLOCK_SIZE_32x8) {
-			block_w = 32;
-			block_h = 8;
+		} else if (DRM_FORMAT_MOD_IS_ARM_AFBC(fb->modifier)) {
+			switch (fb->modifier & AFBC_FORMAT_MOD_BLOCK_SIZE_MASK) {
+				case AFBC_FORMAT_MOD_BLOCK_SIZE_32x8:
+					block_w = 32;
+					block_h = 8;
+					break;
+				case AFBC_FORMAT_MOD_BLOCK_SIZE_64x4:
+					block_w = 64;
+					block_h = 4;
+					break;
+				case AFBC_FORMAT_MOD_BLOCK_SIZE_16x16:
+				default:
+					block_w = 16;
+					block_h = 16;
+					break;
+			}
 		} else {
 			block_w = 16;
 			block_h = 16;
@@ -6281,7 +6294,24 @@ static void vop2_win_atomic_update(struct vop2_win *win, struct drm_rect *src, s
 	}
 
 	if (vpstate->afbc_en) {
-		u8 block_w = IS_ROCKCHIP_RFBC_MOD(fb->modifier) ? 64 : fb->modifier & AFBC_FORMAT_MOD_BLOCK_SIZE_32x8 ? 32 : 16;
+		u8 block_w;
+		if (IS_ROCKCHIP_RFBC_MOD(fb->modifier)) {
+			block_w = 64;
+		} else if (DRM_FORMAT_MOD_IS_ARM_AFBC(fb->modifier)) {
+			switch (fb->modifier & AFBC_FORMAT_MOD_BLOCK_SIZE_MASK) {
+				case AFBC_FORMAT_MOD_BLOCK_SIZE_32x8:
+					block_w = 32;
+					break;
+				case AFBC_FORMAT_MOD_BLOCK_SIZE_64x4:
+					block_w = 64;
+					break;
+				case AFBC_FORMAT_MOD_BLOCK_SIZE_16x16:
+				default:
+					block_w = 16;
+			}
+		} else {
+			block_w = 16;
+		}
 
 		/* the afbc superblock is 16 x 16 */
 		afbc_format = vop2_convert_afbc_format(fb->format->format);

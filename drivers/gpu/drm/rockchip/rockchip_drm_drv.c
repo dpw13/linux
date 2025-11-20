@@ -190,12 +190,20 @@ const char *rockchip_drm_modifier_to_string(uint64_t modifier)
 	case DRM_FORMAT_MOD_ROCKCHIP_RFBC(ROCKCHIP_RFBC_BLOCK_SIZE_64x4):
 		return "_RFBC-64x4";
 	default:
-		if (modifier & AFBC_FORMAT_MOD_BLOCK_SIZE_32x8)
-			return "_AFBC-32x8";
-		else if (modifier & AFBC_FORMAT_MOD_BLOCK_SIZE_16x16)
-			return "_AFBC-16x16";
-		else
+		if (DRM_FORMAT_MOD_IS_ARM_AFBC(modifier)) {
+			switch (modifier & AFBC_FORMAT_MOD_BLOCK_SIZE_MASK) {
+				case AFBC_FORMAT_MOD_BLOCK_SIZE_16x16:
+					return "_AFBC-16x16";
+				case AFBC_FORMAT_MOD_BLOCK_SIZE_32x8:
+					return "_AFBC-32x8";
+				case AFBC_FORMAT_MOD_BLOCK_SIZE_64x4:
+					return "_AFBC-64x4";
+				default:
+					return "_AFBC-unknown";
+			}
+		} else {
 			return "";
+		}
 	}
 }
 EXPORT_SYMBOL(rockchip_drm_modifier_to_string);
