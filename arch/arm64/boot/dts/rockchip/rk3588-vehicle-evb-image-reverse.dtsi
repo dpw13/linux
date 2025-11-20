@@ -77,6 +77,7 @@
 
 		csi2_dcphy0 {
 			status = "disabled";
+			#phy-cells = <0>;
 			clocks = <&cru CLK_MIPI_CAMARAOUT_M1>,
 				<&cru PCLK_MIPI_DCPHY0>,
 				<&cru PCLK_CSI_HOST_0>,
@@ -96,6 +97,8 @@
 		};
 		csi2_dcphy1 {
 			status = "disabled";
+			#phy-cells = <0>;
+
 			clocks = <&cru CLK_MIPI_CAMARAOUT_M2>,
 				<&cru PCLK_MIPI_DCPHY1>,
 				<&cru PCLK_CSI_HOST_1>,

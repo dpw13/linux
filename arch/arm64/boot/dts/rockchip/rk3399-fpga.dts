@@ -15,7 +15,7 @@
 		bootargs = "init=/init console=uart,mmio32,0xff1a0000";
 	};
 
-	memory@00000000 {
+	memory@0 {
 		device_type = "memory";
 		reg = <0x0 0x00000000 0x0 0x20000000>;
 	};

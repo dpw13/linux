@@ -14,6 +14,7 @@
 #include <dt-bindings/sensor-dev.h>
 #include <dt-bindings/usb/pd.h>
 
+#include "rk3588s.dtsi"
 #include "rk3588s-odroid-m2-power.dtsi"
 #include "rk3588s-odroid-m2.dtsi"
 #include "rk3588-linux.dtsi"

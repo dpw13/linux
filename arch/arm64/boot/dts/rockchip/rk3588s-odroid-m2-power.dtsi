@@ -13,8 +13,6 @@
 #include <dt-bindings/display/rockchip_vop.h>
 #include <dt-bindings/sensor-dev.h>
 
-#include "rk3588s.dtsi"
-
 / {
 	vcc12v_dcin: vcc12v-dcin {
 		compatible = "regulator-fixed";
